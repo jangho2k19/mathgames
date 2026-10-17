@@ -150,6 +150,19 @@ html, body {
   gap: 6px;
 }
 
+.hud-btn.btn-switch-game {
+  width: auto;
+  padding: 0 16px;
+  background: linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%);
+  border-color: #7DD3FC;
+  border-bottom-color: #0284C7;
+  color: #0369A1;
+  font-weight: 800;
+  font-size: 15px;
+  gap: 6px;
+  text-decoration: none;
+}
+
 /* Huy hiệu sao tích lũy */
 .star-badge {
   background: rgba(255, 255, 255, 0.92);

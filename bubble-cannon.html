@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Đại Bác Bong Bóng - Bé Vui Học Toán Lớp 1</title>
+  <meta name="description" content="Trò chơi toán học Đại Bác Bong Bóng (Bubble Cannon Math) dành cho học sinh Lớp 1. Luyện tập phép cộng trừ trong phạm vi 10.">
+
+  <!-- Google Fonts: Nunito & Quicksand bo tròn, thân thiện với trẻ nhỏ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-blue: #0284C7;
+      --primary-indigo: #4F46E5;
+      --accent-yellow: #FBBF24;
+      --accent-orange: #F97316;
+      --heart-red: #EF4444;
+      --text-dark: #1E293B;
+      --font-main: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0369A1 0%, #0F766E 50%, #15803D 100%);
+      font-family: var(--font-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-wrapper {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+
+    #game-container {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16 / 9;
+      background: #7DD3FC;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 0 8px rgba(255, 255, 255, 0.25);
+    }
+
+    #cannonCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+      cursor: crosshair;
+    }
+
+    /* Giao diện UI Layer */
+    #ui-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Top HUD */
+    #top-hud {
+      pointer-events: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      z-index: 20;
+    }
+
+    .hud-left, .hud-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hud-badge {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 3px solid #E0F2FE;
+      border-bottom: 5px solid #0284C7;
+      border-radius: 9999px;
+      padding: 6px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #0369A1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .hud-badge.score-badge {
+      border-color: #FEF08A;
+      border-bottom-color: #F59E0B;
+      color: #B45309;
+    }
+
+    .hud-badge.heart-badge {
+      border-color: #FECACA;
+      border-bottom-color: #EF4444;
+      color: #DC2626;
+      letter-spacing: 2px;
+      font-size: 22px;
+    }
+
+    .hud-btn {
+      background: linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%);
+      border: 3px solid #E2E8F0;
+      border-bottom: 5px solid #CBD5E1;
+      border-radius: 9999px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .hud-btn:hover {
+      transform: translateY(-2px) scale(1.06);
+      border-color: #0284C7;
+    }
+
+    .hud-btn:active {
+      transform: translateY(2px) scale(0.96);
+      border-bottom-width: 3px;
+    }
+
+    .hud-btn.btn-switch-game {
+      width: auto;
+      padding: 0 16px;
+      background: linear-gradient(180deg, #FEE2E2 0%, #FCA5A5 100%);
+      border-color: #F87171;
+      border-bottom-color: #EF4444;
+      color: #991B1B;
+      font-size: 15px;
+      font-weight: 800;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    /* Thanh đếm ngược thời gian */
+    #timer-container {
+      position: absolute;
+      top: 74px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 420px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 3px solid #FFFFFF;
+      border-radius: 9999px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      pointer-events: auto;
+    }
+
+    #timer-bar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #10B981, #059669);
+      border-radius: 9999px;
+      transition: width 0.1s linear, background 0.3s ease;
+    }
+
+    /* Bảng câu hỏi gắn trên nòng pháo */
+    #question-card {
+      pointer-events: auto;
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #FEF9C3 0%, #FDE047 100%);
+      border: 5px solid #854D0E;
+      border-bottom: 8px solid #713F12;
+      border-radius: 28px;
+      padding: 8px 24px 10px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      z-index: 20;
+    }
+
+    .question-label {
+      font-size: 16px;
+      font-weight: 800;
+      color: #854D0E;
+    }
+
+    .question-math {
+      font-size: 38px;
+      font-weight: 900;
+      color: #9A3412;
+      background: #FFFFFF;
+      padding: 2px 18px;
+      border-radius: 18px;
+      border: 3px solid #EA580C;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+      letter-spacing: 2px;
+    }
+
+    .btn-speak-question {
+      background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+      border: 2px solid #34D399;
+      border-bottom: 4px solid #047857;
+      border-radius: 9999px;
+      padding: 6px 14px;
+      color: white;
+      font-weight: 800;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+    }
+
+    .btn-speak-question:hover {
+      transform: scale(1.08);
+    }
+
+    /* Thông báo phản hồi đúng/sai */
+    .toast-feedback {
+      position: absolute;
+      top: 105px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 9999px;
+      padding: 10px 28px;
+      font-size: 20px;
+      font-weight: 900;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 25;
+      pointer-events: none;
+    }
+
+    .toast-feedback.success {
+      border: 3px solid #34D399;
+      border-bottom: 5px solid #059669;
+      color: #065F46;
+    }
+
+    .toast-feedback.wrong {
+      border: 3px solid #FCA5A5;
+      border-bottom: 5px solid #DC2626;
+      color: #991B1B;
+    }
+
+    .toast-feedback.hidden {
+      opacity: 0;
+      transform: translate(-50%, -20px) scale(0.8);
+    }
+
+    /* Modals (Game Over & Victory) */
+    .modal-overlay {
+      pointer-events: auto;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .modal-card {
+      background: linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%);
+      border: 6px solid #FBBF24;
+      border-radius: 36px;
+      padding: 36px 48px;
+      max-width: 580px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), 0 0 0 8px rgba(255, 255, 255, 0.5);
+      animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalPop {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-icon {
+      font-size: 75px;
+      margin-bottom: 8px;
+      animation: iconFloat 1.5s infinite ease-in-out;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .modal-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: #78350F;
+      margin-bottom: 12px;
+    }
+
+    .modal-desc {
+      font-size: 18px;
+      font-weight: 700;
+      color: #4B5563;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .btn-large {
+      padding: 16px 36px;
+      font-size: 22px;
+      font-weight: 900;
+      border-radius: 9999px;
+      cursor: pointer;
+      border: none;
+      background: linear-gradient(180deg, #0284C7 0%, #0369A1 100%);
+      color: white;
+      border-bottom: 6px solid #075985;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.4);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .btn-large:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 12px 28px rgba(2, 132, 199, 0.5);
+    }
+
+    .btn-large:active {
+      transform: translateY(2px) scale(0.98);
+      border-bottom-width: 3px;
+    }
+
+    @media (max-width: 900px) {
+      .question-math {
+        font-size: 26px;
+        padding: 2px 10px;
+      }
+      #timer-container {
+        width: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-wrapper">
+    <div id="game-container">
+      <canvas id="cannonCanvas" width="1280" height="720"></canvas>
+
+      <div id="ui-layer">
+        <!-- Top HUD -->
+        <header id="top-hud">
+          <div class="hud-left">
+            <a href="index.html" class="hud-btn btn-switch-game" title="Quay lại game Thỏ Gom Cà Rốt">
+              <span>🥕</span>
+              <span>Thỏ Gom Cà Rốt</span>
+            </a>
+            <div class="hud-badge score-badge" title="Điểm số hiện tại">
+              <span>⭐ Điểm:</span>
+              <span id="score-text">0</span>
+            </div>
+            <div class="hud-badge heart-badge" id="heart-display" title="Số mạng còn lại">
+              <span id="hearts-icons">❤️❤️❤️</span>
+            </div>
+          </div>
+
+          <div class="hud-right">
+            <button id="btn-sound" class="hud-btn" title="Bật/Tắt âm thanh">
+              <span class="btn-icon">🔊</span>
+            </button>
+            <button id="btn-music" class="hud-btn" title="Bật/Tắt nhạc nền">
+              <span class="btn-icon">🎵</span>
+            </button>
+            <button id="btn-fullscreen" class="hud-btn" title="Toàn màn hình">
+              <span class="btn-icon">⛶</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Thanh đếm ngược thời gian -->
+        <div id="timer-container" title="Thời gian còn lại">
+          <div id="timer-bar"></div>
+        </div>
+
+        <!-- Thông báo phản hồi đúng / sai -->
+        <div id="feedback-toast" class="toast-feedback hidden">
+          <span id="feedback-text">🎉 Xuất sắc! +10 điểm!</span>
+        </div>
+
+        <!-- Bảng câu hỏi gắn ngay trên khẩu pháo -->
+        <div id="question-card">
+          <span class="question-label">🎯 Bắn bóng chứa đáp án:</span>
+          <div class="question-math" id="math-expression">5 + 2 = ?</div>
+          <button id="btn-speak-question" class="btn-speak-question" title="Nghe câu hỏi">
+            <span>📢</span>
+            <span>Nghe</span>
+          </button>
+        </div>
+
+        <!-- Modal Game Over -->
+        <div id="game-over-modal" class="modal-overlay hidden">
+          <div class="modal-card">
+            <div class="modal-icon">💥</div>
+            <h2 class="modal-title">HẾT TIM RỒI!</h2>
+            <p class="modal-desc">
+              Bé đã bắn rất dũng cảm và đạt được <strong id="final-score-gameover">0</strong> điểm! Hãy cùng thử lại để đạt điểm cao hơn nhé!
+            </p>
+            <button id="btn-restart-gameover" class="btn-large">
+              <span>🔄 Chơi lại ngay 🚀</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Chiến Thắng (100 điểm) -->
+        <div id="victory-modal" class="modal-overlay hidden">
+          <div class="modal-card">
+            <div class="modal-icon">🏆</div>
+            <h2 class="modal-title">CHIẾN THẮNG XUẤT SẮC!</h2>
+            <p class="modal-desc">
+              Bé đã đạt mốc <strong id="final-score-victory">100</strong> điểm! Bé tính toán cực nhanh và ngắm bắn siêu chuẩn!
+            </p>
+            <button id="btn-restart-victory" class="btn-large">
+              <span>✨ Chơi lại nhận thêm cúp ✨</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * ========================================================================
+     * ĐẠI BÁC BONG BÓNG (BUBBLE CANNON MATH) - BÉ VUI HỌC TOÁN LỚP 1
+     * ========================================================================
+     */
+
+    // 1. ÂM THANH TỔNG HỢP (WEB AUDIO API & TTS TIẾNG VIỆT)
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.soundEnabled = true;
+        this.musicEnabled = false;
+        this.synth = window.speechSynthesis || null;
+        this.voice = null;
+
+        if (this.synth) {
+          const loadVoices = () => {
+            const voices = this.synth.getVoices();
+            this.voice = voices.find(v => v.lang.startsWith('vi')) || null;
+          };
+          loadVoices();
+          if (this.synth.onvoiceschanged !== undefined) {
+            this.synth.onvoiceschanged = loadVoices;
+          }
+        }
+      }
+
+      initCtx() {
+        if (!this.ctx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) this.ctx = new AudioContextClass();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      speak(text) {
+        if (!this.soundEnabled || !this.synth) return;
+        try {
+          this.synth.cancel();
+          const u = new SpeechSynthesisUtterance(text);
+          u.rate = 0.95;
+          u.pitch = 1.1;
+          u.lang = 'vi-VN';
+          if (this.voice) u.voice = this.voice;
+          this.synth.speak(u);
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+
+      playShoot() {
+        if (!this.soundEnabled) return;
+        this.initCtx();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.12);
+
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.13);
+      }
+
+      playPop() {
+        if (!this.soundEnabled) return;
+        this.initCtx();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(1100, now + 0.08);
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.13);
+      }
+
+      playCorrect() {
+        if (!this.soundEnabled) return;
+        this.initCtx();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.5]; // C - E - G - C
+        const now = this.ctx.currentTime;
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const t = now + idx * 0.08;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.22, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.36);
+        });
+      }
+
+      playWrong() {
+        if (!this.soundEnabled) return;
+        this.initCtx();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(140, now + 0.25);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      }
+
+      playFanfare() {
+        if (!this.soundEnabled) return;
+        this.initCtx();
+        if (!this.ctx) return;
+        const melody = [261.63, 329.63, 392.0, 523.25, 659.25, 783.99];
+        let t = this.ctx.currentTime;
+        melody.forEach(f => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, t);
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.22);
+          t += 0.12;
+        });
+      }
+
+      toggleMusic() {
+        this.musicEnabled = !this.musicEnabled;
+        if (this.musicEnabled) this.startMusic();
+        else this.stopMusic();
+        return this.musicEnabled;
+      }
+
+      startMusic() {
+        if (!this.musicEnabled || this.bgmTimer) return;
+        this.initCtx();
+        const chordLoop = [
+          [261.63, 329.63, 392.0], // C
+          [220.0, 261.63, 329.63], // Am
+          [174.61, 220.0, 261.63], // F
+          [196.0, 246.94, 293.66]  // G
+        ];
+        let step = 0;
+        const beat = () => {
+          if (!this.musicEnabled || !this.ctx) return;
+          const chord = chordLoop[Math.floor(step / 2) % chordLoop.length];
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(chord[step % chord.length] * 1.5, now);
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.36);
+          step++;
+          this.bgmTimer = setTimeout(beat, 500);
+        };
+        beat();
+      }
+
+      stopMusic() {
+        if (this.bgmTimer) {
+          clearTimeout(this.bgmTimer);
+          this.bgmTimer = null;
+        }
+      }
+    }
+
+    // 2. LOGIC GAME & ĐẠI BÁC BONG BÓNG
+    class BubbleCannonGame {
+      constructor(canvas, sound) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.sound = sound;
+
+        this.score = 0;
+        this.hearts = 3;
+        this.maxHearts = 3;
+        this.targetScore = 100;
+        this.isGameOver = false;
+
+        // Thời gian mỗi câu hỏi (25 giây)
+        this.roundTimeMax = 25;
+        this.roundTimeLeft = this.roundTimeMax;
+
+        // Khẩu pháo tại đáy màn hình
+        this.cannon = {
+          x: 640,
+          y: 675,
+          angle: -Math.PI / 2, // Hướng thẳng lên trời mặc định
+          recoil: 0,
+          barrelLength: 68,
+          barrelWidth: 26
+        };
+
+        // Danh sách đạn ngôi sao
+        this.bullets = [];
+
+        // Danh sách bong bóng
+        this.balloons = [];
+        this.balloonColors = [
+          { main: '#EF4444', light: '#FCA5A5' }, // Đỏ
+          { main: '#3B82F6', light: '#93C5FD' }, // Lam
+          { main: '#10B981', light: '#6EE7B7' }, // Lục
+          { main: '#F59E0B', light: '#FDE68A' }, // Vàng cam
+          { main: '#8B5CF6', light: '#C4B5FD' }  // Tím
+        ];
+
+        // Hạt hiệu ứng
+        this.particles = [];
+
+        // Câu hỏi toán hiện tại
+        this.currentQuestion = null;
+
+        // Đám mây nền
+        this.clouds = [
+          { x: 100, y: 80, scale: 0.9, speed: 0.2 },
+          { x: 450, y: 130, scale: 1.1, speed: 0.25 },
+          { x: 880, y: 70, scale: 0.8, speed: 0.18 },
+          { x: 1220, y: 110, scale: 1.0, speed: 0.22 }
+        ];
+
+        this.time = 0;
+        this.initQuestion();
+      }
+
+      // Sinh ngẫu nhiên câu hỏi phép cộng/trừ trong phạm vi 10
+      generateQuestion() {
+        const isAddition = Math.random() > 0.4; // 60% cộng, 40% trừ
+        let a, b, answer, text, voiceText;
+
+        if (isAddition) {
+          answer = Math.floor(Math.random() * 9) + 2; // 2 -> 10
+          a = Math.floor(Math.random() * (answer - 1)) + 1;
+          b = answer - a;
+          text = `${a} + ${b} = ?`;
+          voiceText = `${a} cộng ${b} bằng bao nhiêu?`;
+        } else {
+          a = Math.floor(Math.random() * 9) + 2; // 2 -> 10
+          b = Math.floor(Math.random() * a) + 1;
+          answer = a - b;
+          text = `${a} - ${b} = ?`;
+          voiceText = `${a} trừ ${b} bằng bao nhiêu?`;
+        }
+
+        // Tạo 3 đáp án nhiễu
+        const options = [answer];
+        while (options.length < 4) {
+          const offset = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1);
+          let dummy = answer + offset;
+          if (dummy < 0) dummy = Math.abs(dummy) + 1;
+          if (dummy > 15) dummy = answer - 1;
+          if (!options.includes(dummy)) {
+            options.push(dummy);
+          }
+        }
+
+        // Xáo trộn đáp án
+        const shuffledOptions = options.sort(() => Math.random() - 0.5);
+
+        return {
+          text: text,
+          voiceText: voiceText,
+          answer: answer,
+          options: shuffledOptions
+        };
+      }
+
+      initQuestion() {
+        this.currentQuestion = this.generateQuestion();
+        this.roundTimeLeft = this.roundTimeMax;
+
+        // Cập nhật thẻ câu hỏi UI
+        const mathEl = document.getElementById('math-expression');
+        if (mathEl) mathEl.textContent = this.currentQuestion.text;
+
+        // Sinh 4 quả bóng bay lơ lửng đều nhau
+        const slotX = [220, 500, 780, 1060];
+        this.balloons = this.currentQuestion.options.map((val, idx) => {
+          const colorObj = this.balloonColors[idx % this.balloonColors.length];
+          return {
+            id: idx,
+            x: slotX[idx],
+            baseY: 200 + (idx % 2) * 50,
+            y: 200 + (idx % 2) * 50,
+            radius: 46,
+            value: val,
+            isCorrect: val === this.currentQuestion.answer,
+            color: colorObj.main,
+            colorLight: colorObj.light,
+            floatSpeed: 1.5 + (idx % 3) * 0.4,
+            floatOffset: idx * 1.6,
+            shake: 0,
+            popping: false
+          };
+        });
+
+        // Tự động phát âm thanh đọc câu hỏi
+        setTimeout(() => {
+          this.speakQuestion();
+        }, 300);
+      }
+
+      speakQuestion() {
+        if (this.currentQuestion) {
+          this.sound.speak(this.currentQuestion.voiceText);
+        }
+      }
+
+      // Xoay nòng pháo theo con trỏ chuột
+      updateCannonAngle(canvasX, canvasY) {
+        const dx = canvasX - this.cannon.x;
+        const dy = canvasY - this.cannon.y;
+        let ang = Math.atan2(dy, dx);
+
+        // Giới hạn nòng pháo chỉ bắn hướng lên trên bầu trời (-165 độ đến -15 độ)
+        const minAng = -Math.PI * 0.92;
+        const maxAng = -Math.PI * 0.08;
+        if (ang > 0) {
+          ang = dx > 0 ? maxAng : minAng;
+        } else {
+          ang = Math.max(minAng, Math.min(maxAng, ang));
+        }
+        this.cannon.angle = ang;
+      }
+
+      // Bắn đạn ngôi sao
+      shootBullet() {
+        if (this.isGameOver) return;
+        this.sound.playShoot();
+
+        // Độ giật nòng pháo
+        this.cannon.recoil = 12;
+
+        const muzzleX = this.cannon.x + Math.cos(this.cannon.angle) * this.cannon.barrelLength;
+        const muzzleY = this.cannon.y + Math.sin(this.cannon.angle) * this.cannon.barrelLength;
+        const speed = 14;
+
+        this.bullets.push({
+          x: muzzleX,
+          y: muzzleY,
+          vx: Math.cos(this.cannon.angle) * speed,
+          vy: Math.sin(this.cannon.angle) * speed,
+          radius: 12,
+          rotation: 0
+        });
+
+        // Khói nòng pháo
+        for (let i = 0; i < 6; i++) {
+          this.particles.push({
+            x: muzzleX,
+            y: muzzleY,
+            vx: (Math.random() - 0.5) * 3,
+            vy: (Math.random() - 0.5) * 3,
+            size: 6 + Math.random() * 6,
+            color: 'rgba(255, 255, 255, 0.7)',
+            life: 1,
+            decay: 0.06,
+            type: 'circle'
+          });
+        }
+      }
+
+      // Hiển thị toast thông báo
+      showFeedback(msg, isSuccess = true) {
+        const toast = document.getElementById('feedback-toast');
+        const text = document.getElementById('feedback-text');
+        if (toast && text) {
+          text.textContent = msg;
+          toast.className = `toast-feedback ${isSuccess ? 'success' : 'wrong'}`;
+          toast.classList.remove('hidden');
+          setTimeout(() => {
+            toast.classList.add('hidden');
+          }, 1400);
+        }
+      }
+
+      // Cập nhật giao diện HUD (Điểm & Tim)
+      updateHUD() {
+        const scoreEl = document.getElementById('score-text');
+        if (scoreEl) scoreEl.textContent = this.score;
+
+        const heartsEl = document.getElementById('hearts-icons');
+        if (heartsEl) {
+          let icons = '';
+          for (let i = 0; i < this.maxHearts; i++) {
+            icons += i < this.hearts ? '❤️' : '🤍';
+          }
+          heartsEl.textContent = icons;
+        }
+
+        // Thanh thời gian
+        const timerBar = document.getElementById('timer-bar');
+        if (timerBar) {
+          const pct = Math.max(0, (this.roundTimeLeft / this.roundTimeMax) * 100);
+          timerBar.style.width = `${pct}%`;
+          if (pct > 50) timerBar.style.background = 'linear-gradient(90deg, #10B981, #059669)';
+          else if (pct > 25) timerBar.style.background = 'linear-gradient(90deg, #FBBF24, #D97706)';
+          else timerBar.style.background = 'linear-gradient(90deg, #EF4444, #B91C1C)';
+        }
+      }
+
+      // Xử lý mất 1 tim
+      loseHeart() {
+        this.hearts--;
+        this.sound.playWrong();
+        this.updateHUD();
+
+        if (this.hearts <= 0) {
+          this.triggerGameOver();
+        }
+      }
+
+      triggerGameOver() {
+        this.isGameOver = true;
+        const modal = document.getElementById('game-over-modal');
+        const scoreEl = document.getElementById('final-score-gameover');
+        if (scoreEl) scoreEl.textContent = this.score;
+        if (modal) modal.classList.remove('hidden');
+        this.sound.speak('Hết tim rồi! Bé hãy thử lại nhé!');
+      }
+
+      triggerVictory() {
+        this.isGameOver = true;
+        this.sound.playFanfare();
+        const modal = document.getElementById('victory-modal');
+        const scoreEl = document.getElementById('final-score-victory');
+        if (scoreEl) scoreEl.textContent = this.score;
+        if (modal) modal.classList.remove('hidden');
+        this.sound.speak('Xuất sắc! Bé đã chiến thắng và đạt một trăm điểm!');
+      }
+
+      restartGame() {
+        this.score = 0;
+        this.hearts = 3;
+        this.isGameOver = false;
+        this.bullets = [];
+        this.particles = [];
+
+        const goModal = document.getElementById('game-over-modal');
+        const vicModal = document.getElementById('victory-modal');
+        if (goModal) goModal.classList.add('hidden');
+        if (vicModal) vicModal.classList.add('hidden');
+
+        this.updateHUD();
+        this.initQuestion();
+      }
+
+      // ---------------- UPDATE & GAME LOOP ----------------
+      update(dt) {
+        if (this.isGameOver) return;
+        this.time += dt;
+
+        // Mây trôi
+        this.clouds.forEach(c => {
+          c.x += c.speed;
+          if (c.x > 1380) c.x = -150;
+        });
+
+        // Giảm hồi nòng pháo
+        if (this.cannon.recoil > 0) {
+          this.cannon.recoil -= dt * 45;
+          if (this.cannon.recoil < 0) this.cannon.recoil = 0;
+        }
+
+        // Đếm ngược thời gian
+        this.roundTimeLeft -= dt;
+        if (this.roundTimeLeft <= 0) {
+          this.roundTimeLeft = 0;
+          this.showFeedback('⏰ Hết giờ rồi!', false);
+          this.loseHeart();
+          if (!this.isGameOver) {
+            this.initQuestion();
+          }
+        }
+        this.updateHUD();
+
+        // Cập nhật bóng bay lơ lửng
+        this.balloons.forEach(b => {
+          b.y = b.baseY + Math.sin(this.time * b.floatSpeed + b.floatOffset) * 16;
+          if (b.shake > 0) {
+            b.shake -= dt * 5;
+            if (b.shake < 0) b.shake = 0;
+          }
+        });
+
+        // Cập nhật đạn ngôi sao & kiểm tra va chạm
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+          const bullet = this.bullets[i];
+          bullet.x += bullet.vx;
+          bullet.y += bullet.vy;
+          bullet.rotation += 0.2;
+
+          // Hạt lấp lánh đuôi đạn
+          if (Math.random() > 0.4) {
+            this.particles.push({
+              x: bullet.x,
+              y: bullet.y,
+              vx: (Math.random() - 0.5) * 2,
+              vy: (Math.random() - 0.5) * 2,
+              size: 4 + Math.random() * 4,
+              color: '#FDE047',
+              life: 1,
+              decay: 0.05,
+              type: 'star'
+            });
+          }
+
+          // Kiểm tra va chạm với các bóng bay
+          let bulletRemoved = false;
+          for (let j = this.balloons.length - 1; j >= 0; j--) {
+            const b = this.balloons[j];
+            const dist = Math.hypot(bullet.x - b.x, bullet.y - b.y);
+
+            if (dist < b.radius + bullet.radius) {
+              // BẮN TRÚNG BÓNG!
+              bulletRemoved = true;
+              this.bullets.splice(i, 1);
+
+              if (b.isCorrect) {
+                // TRÚNG ĐÁP ÁN ĐÚNG!
+                this.sound.playPop();
+                this.sound.playCorrect();
+                this.spawnPopParticles(b.x, b.y, b.color, 35);
+                this.balloons.splice(j, 1);
+
+                this.score += 10;
+                this.showFeedback('🎉 CHÍNH XÁC! +10 ĐIỂM! ⭐', true);
+                this.sound.speak('Chính xác! Bé giỏi quá!');
+
+                if (this.score >= this.targetScore) {
+                  this.triggerVictory();
+                } else {
+                  setTimeout(() => {
+                    if (!this.isGameOver) this.initQuestion();
+                  }, 800);
+                }
+              } else {
+                // TRÚNG ĐÁP ÁN SAI!
+                this.sound.playPop();
+                this.spawnPopParticles(b.x, b.y, b.color, 18);
+                this.balloons.splice(j, 1); // Xóa quả bóng sai để bé tiếp tục bắn bóng đúng
+
+                this.showFeedback('Ồ, chưa đúng rồi! Bé thử bóng khác nhé!', false);
+                this.loseHeart();
+              }
+              break;
+            }
+          }
+
+          // Nếu đạn bay ra khỏi màn hình
+          if (!bulletRemoved && (bullet.x < -50 || bullet.x > 1330 || bullet.y < -50)) {
+            this.bullets.splice(i, 1);
+          }
+        }
+
+        // Cập nhật hạt
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.08;
+          p.life -= p.decay;
+          if (p.life <= 0) this.particles.splice(i, 1);
+        }
+      }
+
+      spawnPopParticles(x, y, color, count = 25) {
+        for (let i = 0; i < count; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const spd = 3 + Math.random() * 7;
+          this.particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd,
+            size: 6 + Math.random() * 8,
+            color: Math.random() > 0.3 ? color : '#FEF08A',
+            life: 1,
+            decay: 0.02 + Math.random() * 0.02,
+            type: Math.random() > 0.5 ? 'circle' : 'star'
+          });
+        }
+      }
+
+      // ---------------- RENDER MỌI THỨ LÊN CANVAS ----------------
+      render() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, 1280, 720);
+
+        // 1. Nền bầu trời xanh
+        const sky = ctx.createLinearGradient(0, 0, 0, 720);
+        sky.addColorStop(0, '#38BDF8');
+        sky.addColorStop(0.6, '#7DD3FC');
+        sky.addColorStop(1, '#BAE6FD');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, 1280, 720);
+
+        // Đám mây
+        this.clouds.forEach(c => this.drawCloud(c.x, c.y, c.scale));
+
+        // Cầu vồng pastel mờ ảo phía xa
+        this.drawRainbow();
+
+        // Đồi cỏ xa chân trời
+        ctx.fillStyle = '#4ADE80';
+        ctx.beginPath();
+        ctx.moveTo(0, 640);
+        ctx.bezierCurveTo(400, 590, 880, 660, 1280, 620);
+        ctx.lineTo(1280, 720);
+        ctx.lineTo(0, 720);
+        ctx.closePath();
+        ctx.fill();
+
+        // 2. Vẽ các quả bóng bay
+        this.balloons.forEach(b => this.drawBalloon(b));
+
+        // 3. Vẽ đạn ngôi sao
+        this.bullets.forEach(b => this.drawStarBullet(b));
+
+        // 4. Vẽ hạt hiệu ứng
+        this.particles.forEach(p => this.drawParticle(p));
+
+        // 5. Vẽ khẩu đại bác hoạt hình
+        this.drawCannon();
+      }
+
+      drawCloud(x, y, scale) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 32, 0, Math.PI * 2);
+        ctx.arc(32, -12, 36, 0, Math.PI * 2);
+        ctx.arc(72, -4, 28, 0, Math.PI * 2);
+        ctx.arc(98, 8, 22, 0, Math.PI * 2);
+        ctx.arc(46, 14, 30, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawRainbow() {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        const colors = ['#F87171', '#FBBF24', '#34D399', '#60A5FA', '#A78BFA'];
+        colors.forEach((col, i) => {
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 14;
+          ctx.beginPath();
+          ctx.arc(640, 760, 480 + i * 14, Math.PI, Math.PI * 2);
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      drawBalloon(b) {
+        const ctx = this.ctx;
+        const shakeX = b.shake ? Math.sin(this.time * 30) * 8 : 0;
+        ctx.save();
+        ctx.translate(b.x + shakeX, b.y);
+
+        // Dây bóng bay đung đưa
+        ctx.strokeStyle = '#64748B';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, b.radius + 6);
+        ctx.quadraticCurveTo(Math.sin(this.time * 2 + b.id) * 12, b.radius + 32, 0, b.radius + 55);
+        ctx.stroke();
+
+        // Nút thắt bóng
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        ctx.moveTo(-6, b.radius + 4);
+        ctx.lineTo(6, b.radius + 4);
+        ctx.lineTo(0, b.radius + 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Thân bóng bay hình oval
+        const grad = ctx.createRadialGradient(-b.radius * 0.3, -b.radius * 0.3, b.radius * 0.1, 0, 0, b.radius * 1.1);
+        grad.addColorStop(0, b.colorLight);
+        grad.addColorStop(0.7, b.color);
+        grad.addColorStop(1, '#0F172A');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, b.radius, b.radius * 1.18, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Đốm sáng phản chiếu ánh nắng
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.beginPath();
+        ctx.ellipse(-b.radius * 0.42, -b.radius * 0.45, b.radius * 0.22, b.radius * 0.35, -0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Vòng tròn trắng chứa con số
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(0, 2, b.radius * 0.62, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#E2E8F0';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Chữ số to đậm rõ ràng
+        ctx.fillStyle = '#1E293B';
+        ctx.font = '900 36px "Nunito", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(b.value.toString(), 0, 4);
+
+        ctx.restore();
+      }
+
+      drawStarBullet(bullet) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.translate(bullet.x, bullet.y);
+        ctx.rotate(bullet.rotation);
+
+        // Vòng sáng hào quang
+        ctx.fillStyle = 'rgba(253, 224, 71, 0.4)';
+        ctx.beginPath();
+        ctx.arc(0, 0, bullet.radius * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ngôi sao vàng 5 cánh
+        ctx.fillStyle = '#F59E0B';
+        ctx.strokeStyle = '#FFFBEB';
+        ctx.lineWidth = 2;
+        this.drawStarPath(ctx, 0, 0, 5, bullet.radius * 1.2, bullet.radius * 0.55);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      drawStarPath(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+        let rot = (Math.PI / 2) * 3;
+        let x = cx;
+        let y = cy;
+        const step = Math.PI / spikes;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+          x = cx + Math.cos(rot) * outerRadius;
+          y = cy + Math.sin(rot) * outerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+          x = cx + Math.cos(rot) * innerRadius;
+          y = cy + Math.sin(rot) * innerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+      }
+
+      drawParticle(p) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.translate(p.x, p.y);
+        if (p.type === 'star') {
+          this.drawStarPath(ctx, 0, 0, 5, p.size, p.size * 0.45);
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      drawCannon() {
+        const ctx = this.ctx;
+        const c = this.cannon;
+
+        ctx.save();
+        ctx.translate(c.x, c.y);
+
+        // 1. Nòng đại bác xoay theo góc ngắm
+        ctx.save();
+        ctx.rotate(c.angle);
+
+        // Nòng pháo giật lùi khi bắn
+        const recoilOffset = -c.recoil;
+
+        // Thân nòng pháo
+        const barrelGrad = ctx.createLinearGradient(0, -c.barrelWidth / 2, 0, c.barrelWidth / 2);
+        barrelGrad.addColorStop(0, '#475569');
+        barrelGrad.addColorStop(0.3, '#94A3B8');
+        barrelGrad.addColorStop(0.7, '#334155');
+        barrelGrad.addColorStop(1, '#1E293B');
+
+        ctx.fillStyle = barrelGrad;
+        ctx.beginPath();
+        ctx.roundRect(recoilOffset, -c.barrelWidth / 2, c.barrelLength, c.barrelWidth, [6, 12, 12, 6]);
+        ctx.fill();
+
+        // Vành miệng nòng pháo mạ vàng
+        ctx.fillStyle = '#F59E0B';
+        ctx.beginPath();
+        ctx.roundRect(recoilOffset + c.barrelLength - 8, -c.barrelWidth / 2 - 4, 10, c.barrelWidth + 8, 4);
+        ctx.fill();
+
+        ctx.restore();
+
+        // 2. Chân đế đại bác hình vòm kim loại & bánh xe gỗ
+        // Chân đế hình bán nguyệt
+        const baseGrad = ctx.createRadialGradient(0, -5, 10, 0, 0, 48);
+        baseGrad.addColorStop(0, '#FBBF24');
+        baseGrad.addColorStop(0.7, '#D97706');
+        baseGrad.addColorStop(1, '#78350F');
+
+        ctx.fillStyle = baseGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, 38, Math.PI, Math.PI * 2);
+        ctx.fill();
+
+        // Trục xoay trung tâm
+        ctx.fillStyle = '#1E293B';
+        ctx.beginPath();
+        ctx.arc(0, 0, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#94A3B8';
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bánh xe gỗ hai bên
+        ctx.fillStyle = '#854D0E';
+        ctx.fillRect(-62, -10, 24, 25);
+        ctx.fillRect(38, -10, 24, 25);
+
+        ctx.restore();
+      }
+    }
+
+    // 3. KHỞI TẠO VÀ ĐIỀU KHIỂN SỰ KIỆN CHUỘT / CẢM ỨNG
+    window.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('cannonCanvas');
+      const sound = new SoundEngine();
+      const game = new BubbleCannonGame(canvas, sound);
+
+      function getCanvasCoordinates(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        let cx = e.clientX;
+        let cy = e.clientY;
+        if (e.touches && e.touches.length > 0) {
+          cx = e.touches[0].clientX;
+          cy = e.touches[0].clientY;
+        } else if (e.changedTouches && e.changedTouches.length > 0) {
+          cx = e.changedTouches[0].clientX;
+          cy = e.changedTouches[0].clientY;
+        }
+        return {
+          x: (cx - rect.left) * scaleX,
+          y: (cy - rect.top) * scaleY
+        };
+      }
+
+      // Xoay nòng pháo theo di chuyển chuột / ngón tay
+      function onPointerMove(e) {
+        const pos = getCanvasCoordinates(e);
+        game.updateCannonAngle(pos.x, pos.y);
+      }
+
+      // Nhấp chuột để bắn đạn ngôi sao
+      function onPointerDown(e) {
+        sound.initCtx();
+        const pos = getCanvasCoordinates(e);
+        game.updateCannonAngle(pos.x, pos.y);
+        game.shootBullet();
+      }
+
+      canvas.addEventListener('mousemove', onPointerMove);
+      canvas.addEventListener('mousedown', onPointerDown);
+
+      // Cảm ứng điện thoại / tablet
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        onPointerMove(e);
+      }, { passive: false });
+
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        onPointerDown(e);
+      }, { passive: false });
+
+      // Nút nghe câu hỏi
+      const btnSpeak = document.getElementById('btn-speak-question');
+      if (btnSpeak) {
+        btnSpeak.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sound.initCtx();
+          game.speakQuestion();
+        });
+      }
+
+      // Nút âm thanh & nhạc
+      const btnSound = document.getElementById('btn-sound');
+      if (btnSound) {
+        btnSound.addEventListener('click', () => {
+          sound.soundEnabled = !sound.soundEnabled;
+          btnSound.querySelector('.btn-icon').textContent = sound.soundEnabled ? '🔊' : '🔇';
+        });
+      }
+
+      const btnMusic = document.getElementById('btn-music');
+      if (btnMusic) {
+        btnMusic.addEventListener('click', () => {
+          sound.initCtx();
+          const enabled = sound.toggleMusic();
+          btnMusic.querySelector('.btn-icon').textContent = enabled ? '🎶' : '🎵';
+        });
+      }
+
+      // Nút toàn màn hình
+      const btnFullscreen = document.getElementById('btn-fullscreen');
+      if (btnFullscreen) {
+        btnFullscreen.addEventListener('click', () => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
+        });
+      }
+
+      // Nút chơi lại
+      const btnRestartGo = document.getElementById('btn-restart-gameover');
+      if (btnRestartGo) btnRestartGo.addEventListener('click', () => game.restartGame());
+
+      const btnRestartVic = document.getElementById('btn-restart-victory');
+      if (btnRestartVic) btnRestartVic.addEventListener('click', () => game.restartGame());
+
+      // Mở khóa audio
+      const unlock = () => {
+        sound.initCtx();
+        window.removeEventListener('click', unlock);
+        window.removeEventListener('touchstart', unlock);
+      };
+      window.addEventListener('click', unlock);
+      window.addEventListener('touchstart', unlock);
+
+      // Vòng lặp animation
+      let lastTime = performance.now();
+      function loop(now) {
+        const dt = Math.min((now - lastTime) / 1000, 0.1);
+        lastTime = now;
+        game.update(dt);
+        game.render();
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    });
+  </script>
+</body>
+</html>
