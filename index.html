@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Thỏ Gom Cà Rốt - Bé Vui Học Toán Lớp 1</title>
+  <meta name="description" content="Trò chơi giáo dục toán học Thỏ Gom Cà Rốt giúp học sinh lớp 1 rèn luyện tư duy Tách - Gộp số trong phạm vi 10.">
+  
+  <!-- Google Fonts: Nunito & Quicksand bo tròn, thân thiện với trẻ nhỏ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Game Container tự động co giãn 16:9 chuẩn 1280x720 -->
+  <div id="game-wrapper">
+    <div id="game-container">
+      <!-- Canvas chính vẽ hoạt hình, nhân vật, luống đất và hiệu ứng -->
+      <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+      <!-- Lớp giao diện HTML nổi (HUD & Interactive Overlays) -->
+      <div id="ui-layer">
+        <!-- Thanh công cụ trên cùng -->
+        <header id="hud-top">
+          <!-- Góc trái: Tiến trình sao & Nút chức năng -->
+          <div class="hud-left">
+            <div class="star-badge" id="star-progress" title="Tiến trình hoàn thành">
+              <span class="star-icon">⭐</span>
+              <span id="star-count-text">0 / 5</span>
+              <div class="stars-track" id="stars-track">
+                <!-- 5 ngôi sao nhỏ phát sáng khi đạt điểm -->
+                <span class="mini-star">★</span>
+                <span class="mini-star">★</span>
+                <span class="mini-star">★</span>
+                <span class="mini-star">★</span>
+                <span class="mini-star">★</span>
+              </div>
+            </div>
+
+            <button id="btn-sound" class="hud-btn" aria-label="Bật/Tắt âm thanh" title="Âm thanh">
+              <span class="btn-icon">🔊</span>
+            </button>
+            <button id="btn-music" class="hud-btn" aria-label="Bật/Tắt nhạc nền" title="Nhạc nền">
+              <span class="btn-icon">🎵</span>
+            </button>
+          </div>
+
+          <!-- Khu vực Bác Gấu & Bảng Yêu Cầu (Chính giữa) -->
+          <div id="mission-board" class="mission-panel">
+            <div class="mission-avatar" id="bear-avatar" title="Bác Gấu Nông Dân">
+              <span class="avatar-emoji">🐻</span>
+            </div>
+            <div class="mission-content">
+              <div class="mission-speech-bubble">
+                <span class="mission-label">Bác Gấu cần:</span>
+                <span class="mission-target" id="target-number">7</span>
+                <span class="carrot-symbol">🥕</span>
+                <span class="mission-unit">củ cà rốt</span>
+                <button id="btn-speak" class="speak-btn" title="Nghe Bác Gấu đọc yêu cầu">
+                  <span class="speaker-icon">📢</span>
+                  <span class="speak-hint">Nghe</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Góc phải: Giỏ thu hoạch & Nút trợ giúp / Toàn màn hình -->
+          <div class="hud-right">
+            <div class="cart-badge" id="cart-counter" title="Cà rốt trong giỏ">
+              <span class="cart-icon">🧺</span>
+              <div class="cart-info">
+                <span class="cart-label">Trong giỏ:</span>
+                <span class="cart-val" id="collected-val">0</span>
+                <span class="cart-sep">/</span>
+                <span class="cart-target" id="cart-target-val">7</span>
+              </div>
+            </div>
+            
+            <button id="btn-reset-turn" class="hud-btn btn-warning" title="Chọn lại từ đầu" style="display: none;">
+              <span class="btn-icon">🔄</span>
+              <span class="btn-text">Chọn lại</span>
+            </button>
+
+            <button id="btn-help" class="hud-btn" title="Hướng dẫn cách chơi">
+              <span class="btn-icon">❓</span>
+            </button>
+            <button id="btn-fullscreen" class="hud-btn" title="Toàn màn hình">
+              <span class="btn-icon">⛶</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Dòng hướng dẫn bé tương tác (thay đổi theo trạng thái) -->
+        <div id="interaction-guide" class="guide-banner">
+          <p id="guide-text">🌟 Bé hãy bấm chọn <strong>2 luống cà rốt</strong> có tổng bằng <strong id="guide-target">7</strong> nhé!</p>
+        </div>
+
+        <!-- Banner thông báo chúc mừng & hiển thị phép toán Tách - Gộp (a + b = C) -->
+        <div id="success-banner" class="result-banner success hidden">
+          <div class="banner-ribbon">
+            <div class="banner-title">🎉 HOAN HÔ! BÉ GIỎI QUÁ! 🎉</div>
+            <div class="math-formula" id="math-formula-text">
+              <span class="num-a" id="math-a">3</span>
+              <span class="op">+</span>
+              <span class="num-b" id="math-b">4</span>
+              <span class="op">=</span>
+              <span class="num-target" id="math-target">7</span>
+              <span class="formula-carrot">🥕</span>
+            </div>
+            <p class="banner-subtitle">Bác Gấu đã nhận đủ số cà rốt rồi!</p>
+          </div>
+        </div>
+
+        <!-- Thông báo nhắc nhở nhẹ nhàng khi chọn chưa đúng -->
+        <div id="wrong-toast" class="wrong-toast hidden">
+          <div class="toast-content">
+            <span class="toast-icon">🐰💭</span>
+            <div class="toast-text">
+              <strong>Ồ, chưa đúng rồi!</strong>
+              <p id="wrong-detail">Bé thử chọn lại 2 luống khác nhé!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Màn hình chiến thắng khi hoàn thành 5 màn (Trophy Screen) -->
+        <div id="victory-modal" class="modal-overlay hidden">
+          <div class="modal-card">
+            <div class="trophy-bounce">🏆</div>
+            <h2 class="victory-title">XUẤT SẮC! BÉ ĐÃ CHIẾN THẮNG!</h2>
+            <div class="victory-stars">
+              ⭐⭐⭐⭐⭐
+            </div>
+            <p class="victory-desc">
+              Bé đã giúp Thỏ Trắng thu hoạch đủ cà rốt cho Bác Gấu nông dân rồi! Bé rất thông minh và giỏi toán!
+            </p>
+            <div class="victory-actions">
+              <button id="btn-play-again" class="btn-large btn-primary">
+                <span>🥕 Chơi lại từ đầu 🥕</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Hướng Dẫn Cách Chơi Cho Bé & Phụ Huynh / Giáo Viên -->
+        <div id="help-modal" class="modal-overlay hidden">
+          <div class="modal-card help-card">
+            <button class="btn-close-modal" id="btn-close-help">✖</button>
+            <h2 class="help-title">📖 Hướng Dẫn Cách Chơi</h2>
+            <div class="help-steps">
+              <div class="step-item">
+                <span class="step-num">1</span>
+                <p>Nhìn số cà rốt mà <strong>Bác Gấu</strong> đang cần (hoặc bấm nút <strong>📢 Nghe</strong> để nghe giọng đọc).</p>
+              </div>
+              <div class="step-item">
+                <span class="step-num">2</span>
+                <p>Quan sát 4 luống cà rốt trong vườn. Đếm số củ cà rốt và xem số ghi trên biển gỗ.</p>
+              </div>
+              <div class="step-item">
+                <span class="step-num">3</span>
+                <p>Bấm chọn lần lượt <strong>2 luống cà rốt</strong> sao cho <strong>tổng 2 số cộng lại bằng đúng số Bác Gấu cần</strong>.</p>
+              </div>
+              <div class="step-item">
+                <span class="step-num">4</span>
+                <p>Thỏ Trắng sẽ giúp bé thu hoạch và mang vào giỏ. Hoàn thành 5 lượt để nhận Cúp Chiến Thắng! 🏆</p>
+              </div>
+            </div>
+            <button id="btn-start-playing" class="btn-large btn-primary">
+              <span>Đã hiểu, Bắt đầu chơi! 🚀</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts Modular: Audio Synthesis & TTS -> Vector Art & Canvas -> Game Engine -> Main Controller -->
+  <script src="js/audio.js"></script>
+  <script src="js/graphics.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
