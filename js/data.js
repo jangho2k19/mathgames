@@ -332,3 +332,74 @@ export const MIU_ENCOURAGE = [
   'Miu Miu tin bé nhất định sẽ tìm ra đáp số!'
 ];
 
+export const DIFFICULTY_LEVELS = {
+  easy: {
+    id: 'easy',
+    name: 'Dễ',
+    shortName: 'Dễ',
+    icon: '🌱',
+    color: '#16a34a',
+    bgColor: '#dcfce7',
+    borderColor: '#86efac',
+    tag: 'Cơ bản (0 - 10)',
+    scope: '10',
+    desc: 'Phạm vi số 0 - 10 (Học kì 1 cơ bản, đếm và tính đơn giản)'
+  },
+  medium: {
+    id: 'medium',
+    name: 'Vừa',
+    shortName: 'Vừa',
+    icon: '⭐',
+    color: '#d97706',
+    bgColor: '#fef3c7',
+    borderColor: '#fcd34d',
+    tag: 'Chuẩn lớp 1 (0 - 20)',
+    scope: '20',
+    desc: 'Phạm vi số 0 - 20 (Cộng trừ không nhớ, chuẩn lớp 1)'
+  },
+  hard: {
+    id: 'hard',
+    name: 'Khó',
+    shortName: 'Khó',
+    icon: '🔥',
+    color: '#ea580c',
+    bgColor: '#ffedd5',
+    borderColor: '#fdba74',
+    tag: 'Học kì 2 (0 - 100)',
+    scope: '100',
+    desc: 'Phạm vi số 0 - 100 (Số 2 chữ số, tròn chục, tốc độ nhanh hơn)'
+  },
+  challenge: {
+    id: 'challenge',
+    name: 'Thử thách',
+    shortName: 'Thử thách',
+    icon: '⚡',
+    color: '#7c3aed',
+    bgColor: '#f3e8ff',
+    borderColor: '#d8b4fe',
+    tag: 'Toán tư duy & 3 số',
+    scope: 'challenge',
+    desc: 'Toán tư duy nâng cao: Phép tính 3 số, tìm số bí mật (?), toán so sánh biểu thức'
+  }
+};
+
+export function getCurrentDifficulty() {
+  const saved = localStorage.getItem('adv_difficulty_level');
+  if (saved && DIFFICULTY_LEVELS[saved]) return saved;
+  const parentSettings = JSON.parse(localStorage.getItem('adv_parent_settings') || '{}');
+  if (parentSettings.difficulty && DIFFICULTY_LEVELS[parentSettings.difficulty]) return parentSettings.difficulty;
+  if (parentSettings.scope === '100') return 'hard';
+  if (parentSettings.scope === '20') return 'medium';
+  if (parentSettings.scope === '10') return 'easy';
+  return 'medium';
+}
+
+export function setDifficulty(level) {
+  if (!DIFFICULTY_LEVELS[level]) return;
+  localStorage.setItem('adv_difficulty_level', level);
+  const parentSettings = JSON.parse(localStorage.getItem('adv_parent_settings') || '{"autoVoice":true}');
+  parentSettings.difficulty = level;
+  parentSettings.scope = DIFFICULTY_LEVELS[level].scope;
+  localStorage.setItem('adv_parent_settings', JSON.stringify(parentSettings));
+}
+

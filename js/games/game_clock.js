@@ -1,12 +1,13 @@
-import { DAYS_OF_WEEK } from '../data.js';
+import { DAYS_OF_WEEK, DIFFICULTY_LEVELS } from '../data.js';
 import { sound } from '../audio.js';
 
 export class GameClock {
-  constructor(container, onComplete, onStarEarned, semester = 2) {
+  constructor(container, onComplete, onStarEarned, semester = 2, difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
     this.semester = semester;
+    this.difficulty = difficulty;
     this.currentQ = 0;
     this.totalQ = 5;
     this.correctCount = 0;
@@ -67,7 +68,10 @@ export class GameClock {
         <div class="game-header-info">
           <button class="btn-back" id="gameExitBtn">← Trở về</button>
           <div class="game-title-badge">
-            <h2>Bác Đồng Hồ & Lịch Vui (Xem giờ đúng)</h2>
+            <h2>Bác Đồng Hồ & Lịch Vui (Xem giờ)</h2>
+            <span class="game-diff-badge diff-${this.difficulty}">
+              ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).icon} ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).name}
+            </span>
           </div>
         </div>
         <div class="game-progress-bar-wrap">
@@ -126,7 +130,10 @@ export class GameClock {
         <div class="game-header-info">
           <button class="btn-back" id="gameExitBtn">← Trở về</button>
           <div class="game-title-badge">
-            <h2>Bác Đồng Hồ & Lịch Vui (Các ngày trong tuần)</h2>
+            <h2>Bác Đồng Hồ & Lịch Vui (Lịch tuần)</h2>
+            <span class="game-diff-badge diff-${this.difficulty}">
+              ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).icon} ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).name}
+            </span>
           </div>
         </div>
         <div class="game-progress-bar-wrap">

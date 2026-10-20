@@ -1,4 +1,4 @@
-import { GAMES_INFO, BADGES, ROBOT_CHEERS, ISLAND_STATIONS } from './data.js';
+import { GAMES_INFO, BADGES, ROBOT_CHEERS, ISLAND_STATIONS, DIFFICULTY_LEVELS, getCurrentDifficulty, setDifficulty } from './data.js';
 import { sound } from './audio.js';
 import { confetti } from './confetti.js';
 
@@ -32,6 +32,7 @@ class App {
     this.mode = localStorage.getItem('adv_app_mode') || 'adventure'; // 'adventure' or 'curriculum'
     this.currentSemester = 'all'; // 'all', 1, 2
     this.currentGame = null;
+    this.currentGameId = null;
 
     this.mainContent = document.getElementById('mainContent');
     this.starDisplay = document.getElementById('starCount');
@@ -45,18 +46,91 @@ class App {
       if (this.mode === 'adventure') this.renderAdventureMap();
     });
 
-    this.parentZone = new ParentZone(this.modalOverlay, this.modalBody, () => {
-      this.stars = 0;
-      this.updateStarUI();
-      if (this.mode === 'adventure') this.renderAdventureMap();
-    });
+    this.parentZone = new ParentZone(
+      this.modalOverlay,
+      this.modalBody,
+      () => {
+        this.stars = 0;
+        this.updateStarUI();
+        if (this.mode === 'adventure') this.renderAdventureMap();
+      },
+      (newDiff) => {
+        this.updateDifficultyUI();
+        const diffInfo = DIFFICULTY_LEVELS[newDiff];
+        this.showToast(`Đã chuyển cấp độ: ${diffInfo.name} ${diffInfo.icon}`);
+        if (this.currentGame && this.currentGameId) {
+          this.launchGame(this.currentGameId);
+        }
+      }
+    );
   }
 
   init() {
     this.updateStarUI();
+    this.updateDifficultyUI();
+    this.bindDifficultyPicker();
     this.renderMain();
     this.bindGlobalEvents();
     confetti.init();
+  }
+
+  updateDifficultyUI() {
+    const currentDiff = getCurrentDifficulty();
+    const diffInfo = DIFFICULTY_LEVELS[currentDiff] || DIFFICULTY_LEVELS.medium;
+
+    const iconEl = document.getElementById('diffBadgeIcon');
+    const labelEl = document.getElementById('diffBadgeLabel');
+    const btn = document.getElementById('diffPickerBtn');
+
+    if (iconEl) iconEl.textContent = diffInfo.icon;
+    if (labelEl) labelEl.textContent = diffInfo.name;
+    if (btn) {
+      btn.className = `diff-picker-btn diff-${currentDiff}`;
+    }
+
+    document.querySelectorAll('.diff-menu-item').forEach(item => {
+      if (item.dataset.diff === currentDiff) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+  }
+
+  bindDifficultyPicker() {
+    const wrap = document.getElementById('diffPickerWrap');
+    const btn = document.getElementById('diffPickerBtn');
+
+    btn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sound.playClick();
+      wrap?.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.diff-menu-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sound.playClick();
+        const diff = item.dataset.diff;
+        setDifficulty(diff);
+        this.updateDifficultyUI();
+        wrap?.classList.remove('open');
+
+        const diffInfo = DIFFICULTY_LEVELS[diff];
+        this.showToast(`Đã chọn cấp độ: ${diffInfo.name} ${diffInfo.icon}`);
+
+        // If game is active, restart with new difficulty
+        if (this.currentGame && this.currentGameId) {
+          this.launchGame(this.currentGameId);
+        }
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (wrap && !wrap.contains(e.target)) {
+        wrap.classList.remove('open');
+      }
+    });
   }
 
   updateStarUI() {
@@ -283,6 +357,7 @@ class App {
   }
 
   launchGame(gameId) {
+    this.currentGameId = gameId;
     this.mainContent.innerHTML = `<div class="game-screen" id="gameScreen"></div>`;
     const screen = document.getElementById('gameScreen');
 
@@ -294,73 +369,75 @@ class App {
       this.addStar();
     };
 
-    const parentSettings = JSON.parse(localStorage.getItem('adv_parent_settings') || '{"scope":"10","autoVoice":true}');
-    const currentScope = parentSettings.scope || '10';
-    const semesterNum = this.currentSemester === '2' ? 2 : 1;
+    const currentDiff = getCurrentDifficulty();
+    const diffInfo = DIFFICULTY_LEVELS[currentDiff] || DIFFICULTY_LEVELS.medium;
+    const currentScope = diffInfo.scope;
+    const semesterNum = this.currentSemester === '2' ? 2 : (this.currentSemester === '1' ? 1 : (currentDiff === 'hard' || currentDiff === 'challenge' ? 2 : 1));
 
     switch (gameId) {
       // Adventure Island Mini-Games
       case 'adv_count':
-        this.currentGame = new GameAdvCount(screen, onComplete, onStarEarned, currentScope);
+        this.currentGame = new GameAdvCount(screen, onComplete, onStarEarned, currentScope, currentDiff);
         break;
       case 'adv_fruit':
-        this.currentGame = new GameAdvFruit(screen, onComplete, onStarEarned, currentScope);
+        this.currentGame = new GameAdvFruit(screen, onComplete, onStarEarned, currentScope, currentDiff);
         break;
       case 'adv_balloons':
-        this.currentGame = new GameAdvBalloons(screen, onComplete, onStarEarned, currentScope);
+        this.currentGame = new GameAdvBalloons(screen, onComplete, onStarEarned, currentScope, currentDiff);
         break;
       case 'adv_compare':
-        this.currentGame = new GameAdvCompare(screen, onComplete, onStarEarned, currentScope);
+        this.currentGame = new GameAdvCompare(screen, onComplete, onStarEarned, currentScope, currentDiff);
         break;
       case 'adv_frog': {
-        const frogLvl = currentScope === '100' ? 3 : currentScope === '20' ? 2 : 1;
-        this.currentGame = new GameFrog(screen, onComplete, onStarEarned, frogLvl);
+        const frogLvl = currentDiff === 'easy' ? 1 : currentDiff === 'medium' ? 2 : 3;
+        this.currentGame = new GameFrog(screen, onComplete, onStarEarned, frogLvl, currentDiff);
         break;
       }
       case 'adv_shapes':
-        this.currentGame = new GameShapes(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameShapes(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
 
       // Curriculum Mini-Games
       case 'count':
-        this.currentGame = new GameCount(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameCount(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
       case 'compare':
-        this.currentGame = new GameCompare(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameCompare(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
       case 'numberhouse':
-        this.currentGame = new GameNumberHouse(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameNumberHouse(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
       case 'math':
-        this.currentGame = new GameMath(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameMath(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
       case 'shapes':
-        this.currentGame = new GameShapes(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameShapes(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
       case 'measure':
-        this.currentGame = new GameMeasure(screen, onComplete, onStarEarned, 2);
+        this.currentGame = new GameMeasure(screen, onComplete, onStarEarned, 2, currentDiff);
         break;
       case 'clock':
-        this.currentGame = new GameClock(screen, onComplete, onStarEarned, 2);
+        this.currentGame = new GameClock(screen, onComplete, onStarEarned, 2, currentDiff);
         break;
       case 'brick':
-        this.currentGame = new GameBrick(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameBrick(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
       case 'racing':
-        this.currentGame = new GameRacing(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameRacing(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
       case 'bubbles':
-        this.currentGame = new GameBubbles(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameBubbles(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
       case 'fishing':
-        this.currentGame = new GameFishing(screen, onComplete, onStarEarned, semesterNum);
+        this.currentGame = new GameFishing(screen, onComplete, onStarEarned, semesterNum, currentDiff);
         break;
       case 'frog': {
-        const lvl = semesterNum === 2 ? 3 : 1;
-        this.currentGame = new GameFrog(screen, onComplete, onStarEarned, lvl);
+        const lvl = currentDiff === 'easy' ? 1 : currentDiff === 'medium' ? 2 : 3;
+        this.currentGame = new GameFrog(screen, onComplete, onStarEarned, lvl, currentDiff);
         break;
       }
       default:
+        this.currentGameId = null;
         this.renderMain();
         return;
     }
@@ -370,6 +447,8 @@ class App {
       const exitBtn = e.target.closest('#gameExitBtn, #advExitBtn, .btn-back');
       if (exitBtn) {
         sound.playClick();
+        this.currentGame = null;
+        this.currentGameId = null;
         this.renderMain();
       }
     });

@@ -1,12 +1,13 @@
 import { sound } from '../audio.js';
-import { MIU_CHEERS, MIU_ENCOURAGE } from '../data.js';
+import { MIU_CHEERS, MIU_ENCOURAGE, DIFFICULTY_LEVELS } from '../data.js';
 
 export class GameAdvBalloons {
-  constructor(container, onComplete, onStarEarned, currentScope = '10') {
+  constructor(container, onComplete, onStarEarned, currentScope = '10', difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
     this.scope = currentScope;
+    this.difficulty = difficulty;
     this.currentQ = 0;
     this.totalQ = 5;
     this.correctCount = 0;
@@ -23,8 +24,26 @@ export class GameAdvBalloons {
     this.wrongTries = 0;
     const isAdd = Math.random() > 0.5;
     let n1, n2, targetAnswer, promptText, equationStr;
+    const diff = this.difficulty;
 
-    if (this.scope === '100') {
+    if (diff === 'challenge') {
+      const isThree = Math.random() > 0.5;
+      if (isThree) {
+        n1 = Math.floor(Math.random() * 15) + 10;
+        n2 = Math.floor(Math.random() * 10) + 5;
+        const n3 = Math.floor(Math.random() * 8) + 2;
+        targetAnswer = n1 + n2 - n3;
+        equationStr = `${n1} + ${n2} - ${n3} = ?`;
+        promptText = `Bé hãy bắt quả bóng mang kết quả: ${n1} cộng ${n2} trừ ${n3}!`;
+      } else {
+        const p1 = Math.floor(Math.random() * 20) + 15;
+        const p2 = Math.floor(Math.random() * 15) + 8;
+        const sum = p1 + p2;
+        targetAnswer = p2;
+        equationStr = `${p1} + ? = ${sum}`;
+        promptText = `Bé hãy tìm số bí mật trong bóng: ${p1} cộng mấy bằng ${sum}?`;
+      }
+    } else if (diff === 'hard' || this.scope === '100') {
       const t1 = (Math.floor(Math.random() * 4) + 1) * 10;
       const t2 = (Math.floor(Math.random() * 3) + 1) * 10;
       if (isAdd) {
@@ -36,7 +55,9 @@ export class GameAdvBalloons {
         n2 = t2;
         targetAnswer = t1;
       }
-    } else if (this.scope === '20') {
+      equationStr = `${n1} ${isAdd ? '+' : '-'} ${n2} = ?`;
+      promptText = `Bé hãy bắt quả bóng có đáp số của phép tính: ${n1} ${isAdd ? 'cộng' : 'trừ'} ${n2}!`;
+    } else if (diff === 'medium' || this.scope === '20') {
       if (isAdd) {
         n1 = Math.floor(Math.random() * 6) + 6;
         n2 = Math.floor(Math.random() * 6) + 2;
@@ -46,6 +67,8 @@ export class GameAdvBalloons {
         n2 = Math.floor(Math.random() * 6) + 2;
         targetAnswer = n1 - n2;
       }
+      equationStr = `${n1} ${isAdd ? '+' : '-'} ${n2} = ?`;
+      promptText = `Bé hãy bắt quả bóng có đáp số của phép tính: ${n1} ${isAdd ? 'cộng' : 'trừ'} ${n2}!`;
     } else {
       if (isAdd) {
         n1 = Math.floor(Math.random() * 5) + 1;
@@ -56,10 +79,9 @@ export class GameAdvBalloons {
         n2 = Math.floor(Math.random() * (n1 - 1)) + 1;
         targetAnswer = n1 - n2;
       }
+      equationStr = `${n1} ${isAdd ? '+' : '-'} ${n2} = ?`;
+      promptText = `Bé hãy bắt quả bóng có đáp số của phép tính: ${n1} ${isAdd ? 'cộng' : 'trừ'} ${n2}!`;
     }
-
-    equationStr = `${n1} ${isAdd ? '+' : '-'} ${n2} = ?`;
-    promptText = `Bé hãy bắt quả bóng có đáp số của phép tính: ${n1} ${isAdd ? 'cộng' : 'trừ'} ${n2}!`;
 
     // 4 balloon colors and numbers
     const balloonColors = ['#f43f5e', '#38bdf8', '#fbbf24', '#4ade80', '#a855f7'];
@@ -111,6 +133,9 @@ export class GameAdvBalloons {
             <button class="btn-back" id="advExitBtn">🏝️ Về Bản Đồ</button>
             <div class="game-title-badge">
               <h2>Trạm 3: Bắt Bóng Bay</h2>
+              <span class="game-diff-badge diff-${this.difficulty}">
+                ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).icon} ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).name}
+              </span>
             </div>
           </div>
           <div class="game-progress-bar-wrap">

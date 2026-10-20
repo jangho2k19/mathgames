@@ -1,12 +1,13 @@
 import { sound } from '../audio.js';
-import { MIU_CHEERS, MIU_ENCOURAGE } from '../data.js';
+import { MIU_CHEERS, MIU_ENCOURAGE, DIFFICULTY_LEVELS } from '../data.js';
 
 export class GameAdvCompare {
-  constructor(container, onComplete, onStarEarned, currentScope = '10') {
+  constructor(container, onComplete, onStarEarned, currentScope = '10', difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
     this.scope = currentScope;
+    this.difficulty = difficulty;
     this.currentQ = 0;
     this.totalQ = 5;
     this.correctCount = 0;
@@ -22,11 +23,34 @@ export class GameAdvCompare {
   generateQuestion() {
     this.wrongTries = 0;
     let n1, n2, targetSign, promptText;
+    const diff = this.difficulty;
 
-    if (this.scope === '100') {
+    if (diff === 'challenge') {
+      const isExpression = Math.random() > 0.4;
+      if (isExpression) {
+        const a1 = Math.floor(Math.random() * 15) + 10;
+        const a2 = Math.floor(Math.random() * 8) + 2;
+        const isAdd = Math.random() > 0.3;
+        const exprVal = isAdd ? a1 + a2 : a1 - a2;
+        const numVal = exprVal + (Math.floor(Math.random() * 5) - 2);
+        n1 = `${a1} ${isAdd ? '+' : '-'} ${a2}`;
+        n2 = `${numVal}`;
+        const v1 = exprVal;
+        const v2 = numVal;
+        if (v1 > v2) targetSign = '>';
+        else if (v1 < v2) targetSign = '<';
+        else targetSign = '=';
+        promptText = `Bé hãy so sánh phép tính ${n1} với số ${n2} nhé!`;
+        return { n1, n2, targetSign, promptText, signs: ['>', '=', '<'], v1, v2 };
+      } else {
+        const base = Math.floor(Math.random() * 70) + 20;
+        n1 = base;
+        n2 = base + (Math.floor(Math.random() * 5) - 2);
+      }
+    } else if (diff === 'hard' || this.scope === '100') {
       n1 = (Math.floor(Math.random() * 8) + 1) * 10;
       n2 = (Math.floor(Math.random() * 8) + 1) * 10;
-    } else if (this.scope === '20') {
+    } else if (diff === 'medium' || this.scope === '20') {
       n1 = Math.floor(Math.random() * 16) + 3;
       n2 = Math.floor(Math.random() * 16) + 3;
     } else {
@@ -83,6 +107,9 @@ export class GameAdvCompare {
             <button class="btn-back" id="advExitBtn">🏝️ Về Bản Đồ</button>
             <div class="game-title-badge">
               <h2>Trạm 4: Cá Lớn Nuốt Cá Bé (So Sánh)</h2>
+              <span class="game-diff-badge diff-${this.difficulty}">
+                ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).icon} ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).name}
+              </span>
             </div>
           </div>
           <div class="game-progress-bar-wrap">

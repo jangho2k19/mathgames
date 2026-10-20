@@ -1,12 +1,13 @@
-import { SHAPES_DATA } from '../data.js';
+import { SHAPES_DATA, DIFFICULTY_LEVELS } from '../data.js';
 import { sound } from '../audio.js';
 
 export class GameShapes {
-  constructor(container, onComplete, onStarEarned, semester = 1) {
+  constructor(container, onComplete, onStarEarned, semester = 1, difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
     this.semester = semester;
+    this.difficulty = difficulty;
     this.currentQ = 0;
     this.totalQ = 5;
     this.correctCount = 0;
@@ -37,16 +38,21 @@ export class GameShapes {
   }
 
   renderShapeIdentifyQuestion() {
-    const targetShape = SHAPES_DATA[Math.floor(Math.random() * SHAPES_DATA.length)];
+    const availableShapes = this.difficulty === 'easy'
+      ? SHAPES_DATA.filter(s => ['circle', 'square', 'triangle', 'rectangle'].includes(s.id))
+      : SHAPES_DATA;
+    const targetShape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
 
     // Generate 4 options (names of shapes)
     const options = [targetShape.name];
-    const otherShapes = SHAPES_DATA.filter(s => s.id !== targetShape.id);
+    const otherShapes = availableShapes.filter(s => s.id !== targetShape.id);
     otherShapes.sort(() => Math.random() - 0.5);
     for (let i = 0; i < 3; i++) {
       if (otherShapes[i]) options.push(otherShapes[i].name);
     }
     options.sort(() => Math.random() - 0.5);
+
+    const diffInfo = DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium;
 
     this.container.innerHTML = `
       <div class="game-top-bar">
@@ -54,6 +60,9 @@ export class GameShapes {
           <button class="btn-back" id="gameExitBtn">← Trở về</button>
           <div class="game-title-badge">
             <h2>Thợ Xây Hình Khối (Nhận diện hình)</h2>
+            <span class="game-diff-badge diff-${this.difficulty}">
+              ${diffInfo.icon} ${diffInfo.name}
+            </span>
           </div>
         </div>
         <div class="game-progress-bar-wrap">
@@ -147,6 +156,9 @@ export class GameShapes {
           <button class="btn-back" id="gameExitBtn">← Trở về</button>
           <div class="game-title-badge">
             <h2>Thợ Xây Hình Khối (Vị trí trong không gian)</h2>
+            <span class="game-diff-badge diff-${this.difficulty}">
+              ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).icon} ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).name}
+            </span>
           </div>
         </div>
         <div class="game-progress-bar-wrap">

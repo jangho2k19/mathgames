@@ -34,6 +34,58 @@
       </div>
 
       <div class="header-actions">
+        <!-- Difficulty Selector -->
+        <div class="diff-picker-wrap" id="diffPickerWrap">
+          <button class="diff-picker-btn" id="diffPickerBtn" aria-label="Chọn cấp độ khó" title="Đổi cấp độ khó">
+            <span class="diff-badge-icon" id="diffBadgeIcon">⭐</span>
+            <span class="diff-badge-label" id="diffBadgeLabel">Vừa</span>
+            <span class="diff-arrow-icon">▾</span>
+          </button>
+          <div class="diff-dropdown-menu" id="diffDropdownMenu" role="menu">
+            <div class="diff-menu-header">🎯 Chọn Cấp Độ Khó</div>
+            <button class="diff-menu-item" data-diff="easy" role="menuitem">
+              <span class="diff-menu-emoji">🌱</span>
+              <div class="diff-menu-content">
+                <div class="diff-menu-row">
+                  <span class="diff-menu-name">Dễ</span>
+                  <span class="diff-menu-tag">0 - 10</span>
+                </div>
+                <span class="diff-menu-sub">Học kì 1 cơ bản, đếm & tính nhỏ</span>
+              </div>
+            </button>
+            <button class="diff-menu-item" data-diff="medium" role="menuitem">
+              <span class="diff-menu-emoji">⭐</span>
+              <div class="diff-menu-content">
+                <div class="diff-menu-row">
+                  <span class="diff-menu-name">Vừa</span>
+                  <span class="diff-menu-tag">0 - 20</span>
+                </div>
+                <span class="diff-menu-sub">Chuẩn lớp 1, cộng trừ trong 20</span>
+              </div>
+            </button>
+            <button class="diff-menu-item" data-diff="hard" role="menuitem">
+              <span class="diff-menu-emoji">🔥</span>
+              <div class="diff-menu-content">
+                <div class="diff-menu-row">
+                  <span class="diff-menu-name">Khó</span>
+                  <span class="diff-menu-tag">0 - 100</span>
+                </div>
+                <span class="diff-menu-sub">Học kì 2, số 2 chữ số & tính nhanh</span>
+              </div>
+            </button>
+            <button class="diff-menu-item" data-diff="challenge" role="menuitem">
+              <span class="diff-menu-emoji">⚡</span>
+              <div class="diff-menu-content">
+                <div class="diff-menu-row">
+                  <span class="diff-menu-name">Thử thách</span>
+                  <span class="diff-menu-tag">Toán tư duy</span>
+                </div>
+                <span class="diff-menu-sub">Tính 3 số, tìm số (?) bí mật</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
         <!-- Star tracker -->
         <div class="star-counter" id="starTracker" title="Số ngôi sao bé đã đạt được">
           <svg viewBox="0 0 24 24">

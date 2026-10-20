@@ -1,10 +1,12 @@
 import { sound } from './audio.js';
+import { getCurrentDifficulty, setDifficulty } from './data.js';
 
 export class ParentZone {
-  constructor(overlay, modalBody, onResetProgress) {
+  constructor(overlay, modalBody, onResetProgress, onSettingsChanged) {
     this.overlay = overlay;
     this.modalBody = modalBody;
     this.onResetProgress = onResetProgress;
+    this.onSettingsChanged = onSettingsChanged;
     this.isUnlocked = false;
   }
 
@@ -102,21 +104,22 @@ export class ParentZone {
 
         <!-- Settings Group -->
         <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 20px;">
-          <h3 style="font-size: 16px; color: #334155; margin-top: 0; margin-bottom: 12px;">⚙️ Tùy Chỉnh Độ Khó & Giọng Đọc</h3>
+          <h3 style="font-size: 16px; color: #334155; margin-top: 0; margin-bottom: 12px;">⚙️ Tùy Chỉnh Cấp Độ Khó & Giọng Đọc</h3>
           
           <div style="margin-bottom: 14px;">
             <label style="display: block; font-size: 14px; font-weight: 700; color: #475569; margin-bottom: 6px;">
-              Phạm vi số luyện tập ưu tiên:
+              Cấp độ luyện tập cho bé:
             </label>
-            <select id="scopeSelect" style="font-size: 15px; font-weight: 700; padding: 8px 12px; border-radius: 10px; border: 2px solid #cbd5e1; width: 100%;">
-              <option value="10" ${settings.scope === '10' ? 'selected' : ''}>Trong phạm vi 10 (Học kì 1 cơ bản)</option>
-              <option value="20" ${settings.scope === '20' ? 'selected' : ''}>Trong phạm vi 20 (Mở rộng nâng cao)</option>
-              <option value="100" ${settings.scope === '100' ? 'selected' : ''}>Trong phạm vi 100 (Học kì 2)</option>
+            <select id="diffSelect" style="font-size: 15px; font-weight: 700; padding: 10px 12px; border-radius: 10px; border: 2px solid #cbd5e1; width: 100%; background: white;">
+              <option value="easy" ${getCurrentDifficulty() === 'easy' ? 'selected' : ''}>🌱 Dễ - Phạm vi 0 - 10 (Học kì 1 cơ bản)</option>
+              <option value="medium" ${getCurrentDifficulty() === 'medium' ? 'selected' : ''}>⭐ Vừa - Phạm vi 0 - 20 (Chuẩn lớp 1)</option>
+              <option value="hard" ${getCurrentDifficulty() === 'hard' ? 'selected' : ''}>🔥 Khó - Phạm vi 0 - 100 (Học kì 2 nâng cao)</option>
+              <option value="challenge" ${getCurrentDifficulty() === 'challenge' ? 'selected' : ''}>⚡ Thử thách - Toán tư duy (3 số & điền số bí mật ?)</option>
             </select>
           </div>
 
           <div style="display: flex; align-items: center; gap: 10px;">
-            <input type="checkbox" id="autoVoiceCheck" ${settings.autoVoice ? 'checked' : ''} style="width: 18px; height: 18px;">
+            <input type="checkbox" id="autoVoiceCheck" ${settings.autoVoice ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
             <label for="autoVoiceCheck" style="font-size: 14px; font-weight: 700; color: #475569; cursor: pointer;">
               Tự động đọc to câu hỏi bằng tiếng Việt khi vào bài
             </label>
@@ -141,10 +144,17 @@ export class ParentZone {
   bindDashboardEvents() {
     this.modalBody.querySelector('#saveParentSettingsBtn')?.addEventListener('click', () => {
       sound.playClick();
-      const scope = this.modalBody.querySelector('#scopeSelect')?.value || '10';
+      const diff = this.modalBody.querySelector('#diffSelect')?.value || 'medium';
       const autoVoice = this.modalBody.querySelector('#autoVoiceCheck')?.checked ?? true;
 
-      localStorage.setItem('adv_parent_settings', JSON.stringify({ scope, autoVoice }));
+      setDifficulty(diff);
+      const parentSettings = JSON.parse(localStorage.getItem('adv_parent_settings') || '{}');
+      parentSettings.autoVoice = autoVoice;
+      localStorage.setItem('adv_parent_settings', JSON.stringify(parentSettings));
+
+      if (this.onSettingsChanged) {
+        this.onSettingsChanged(diff);
+      }
       this.close();
     });
 

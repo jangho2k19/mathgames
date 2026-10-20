@@ -1,11 +1,13 @@
 import { sound } from '../audio.js';
+import { DIFFICULTY_LEVELS } from '../data.js';
 
 export class GameBrick {
-  constructor(container, onComplete, onStarEarned, semester = 1) {
+  constructor(container, onComplete, onStarEarned, semester = 1, difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
     this.semester = semester;
+    this.difficulty = difficulty;
     this.currentQ = 0;
     this.totalQ = 5;
     this.correctCount = 0;
@@ -30,21 +32,27 @@ export class GameBrick {
   }
 
   generateQuestion() {
-    // Generate difficulty: alternating or based on current question
-    // Q1: Easy (vỡ 1-2 viên)
-    // Q2, Q3: Med (vỡ 3 viên)
-    // Q4, Q5: Hard (vỡ 4-5 viên)
-    let diff = 'easy';
-    let bricksToBreak = 2;
-    if (this.currentQ <= 1) {
-      diff = 'easy';
+    const diff = this.difficulty;
+    let bricksToBreak = 3;
+    let diffClass = 'diff-med';
+    let diffText = '⚡ Bắn vừa (Vỡ 3 viên)';
+
+    if (diff === 'easy') {
       bricksToBreak = 2;
-    } else if (this.currentQ <= 3) {
-      diff = 'med';
+      diffClass = 'diff-easy';
+      diffText = '🌱 Bắn nhẹ (Vỡ 2 viên)';
+    } else if (diff === 'medium') {
       bricksToBreak = 3;
-    } else {
-      diff = 'hard';
+      diffClass = 'diff-med';
+      diffText = '⭐ Bắn chuẩn (Vỡ 3 viên)';
+    } else if (diff === 'hard') {
       bricksToBreak = 4;
+      diffClass = 'diff-hard';
+      diffText = '🔥 Pháo mạnh (Vỡ 4 viên)';
+    } else {
+      bricksToBreak = 5;
+      diffClass = 'diff-hard';
+      diffText = '⚡ Siêu pháo Laze (Vỡ 5 viên)';
     }
 
     let num1, num2, isAdd, targetAnswer, equationStr;
@@ -62,7 +70,7 @@ export class GameBrick {
         targetAnswer = num1 - num2;
         equationStr = `${num1} - ${num2} = ?`;
       }
-    } else if (diff === 'med') {
+    } else if (diff === 'medium') {
       isAdd = Math.random() > 0.5;
       if (isAdd) {
         num1 = Math.floor(Math.random() * 8) + 4; // 4 to 11
@@ -75,36 +83,41 @@ export class GameBrick {
         targetAnswer = num1 - num2;
         equationStr = `${num1} - ${num2} = ?`;
       }
+    } else if (diff === 'hard') {
+      const tens1 = (Math.floor(Math.random() * 5) + 2) * 10;
+      const tens2 = (Math.floor(Math.random() * 4) + 1) * 10;
+      isAdd = Math.random() > 0.4;
+      if (isAdd) {
+        targetAnswer = tens1 + tens2;
+        equationStr = `${tens1} + ${tens2} = ?`;
+      } else {
+        num1 = Math.max(tens1, tens2);
+        num2 = Math.min(tens1, tens2);
+        targetAnswer = num1 - num2;
+        equationStr = `${num1} - ${num2} = ?`;
+      }
     } else {
-      // Hard
-      if (this.semester === 1) {
-        // 3 numbers calculation in Grade 1 Semester 1
-        const a = Math.floor(Math.random() * 4) + 2;
-        const b = Math.floor(Math.random() * 3) + 1;
-        const c = Math.floor(Math.random() * 2) + 1;
+      // challenge: 3 numbers or missing operand
+      const isThreeNums = Math.random() > 0.5;
+      if (isThreeNums) {
+        const a = Math.floor(Math.random() * 15) + 10;
+        const b = Math.floor(Math.random() * 10) + 5;
+        const c = Math.floor(Math.random() * 8) + 2;
         targetAnswer = a + b - c;
         equationStr = `${a} + ${b} - ${c} = ?`;
       } else {
-        // Round tens within 100
-        const tens1 = (Math.floor(Math.random() * 5) + 2) * 10;
-        const tens2 = (Math.floor(Math.random() * 4) + 1) * 10;
-        isAdd = Math.random() > 0.4;
-        if (isAdd) {
-          targetAnswer = tens1 + tens2;
-          equationStr = `${tens1} + ${tens2} = ?`;
-        } else {
-          num1 = Math.max(tens1, tens2);
-          num2 = Math.min(tens1, tens2);
-          targetAnswer = num1 - num2;
-          equationStr = `${num1} - ${num2} = ?`;
-        }
+        const p1 = Math.floor(Math.random() * 20) + 15;
+        const p2 = Math.floor(Math.random() * 15) + 10;
+        const sum = p1 + p2;
+        targetAnswer = p2;
+        equationStr = `${p1} + ? = ${sum}`;
       }
     }
 
     // 4 answer choices
     const options = [targetAnswer];
     while (options.length < 4) {
-      const delta = Math.floor(Math.random() * 7) - 3;
+      const delta = (Math.floor(Math.random() * 7) - 3) * (diff === 'hard' || diff === 'challenge' ? 10 : 1);
       const opt = Math.max(0, targetAnswer + delta);
       if (!options.includes(opt)) options.push(opt);
     }
@@ -112,6 +125,8 @@ export class GameBrick {
 
     return {
       diff,
+      diffClass,
+      diffText,
       bricksToBreak,
       equationStr,
       targetAnswer,
@@ -131,17 +146,8 @@ export class GameBrick {
   }
 
   render() {
-    const { diff, bricksToBreak, equationStr, options } = this.currentProblem;
-
-    let diffText = '🟢 Dễ (Phá 1-2 gạch)';
-    let diffClass = 'diff-easy';
-    if (diff === 'med') {
-      diffText = '🟡 Vừa (Phá 3 gạch)';
-      diffClass = 'diff-med';
-    } else if (diff === 'hard') {
-      diffText = '🔴 Khó (Nổ bom 4 gạch!)';
-      diffClass = 'diff-hard';
-    }
+    const { diff, bricksToBreak, equationStr, options, diffClass, diffText } = this.currentProblem;
+    const diffInfo = DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium;
 
     // Render wall bricks in rows of 6
     const rows = [];
@@ -165,6 +171,9 @@ export class GameBrick {
           <button class="btn-back" id="gameExitBtn">← Trở về</button>
           <div class="game-title-badge">
             <h2>🧱 Thợ Phá Gạch Toán Học</h2>
+            <span class="game-diff-badge diff-${this.difficulty}">
+              ${diffInfo.icon} ${diffInfo.name}
+            </span>
           </div>
         </div>
         <div class="game-progress-bar-wrap">

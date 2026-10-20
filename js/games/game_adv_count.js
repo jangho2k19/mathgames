@@ -1,12 +1,13 @@
 import { sound } from '../audio.js';
-import { MIU_CHEERS, MIU_ENCOURAGE } from '../data.js';
+import { MIU_CHEERS, MIU_ENCOURAGE, DIFFICULTY_LEVELS } from '../data.js';
 
 export class GameAdvCount {
-  constructor(container, onComplete, onStarEarned, currentScope = '10') {
+  constructor(container, onComplete, onStarEarned, currentScope = '10', difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
     this.scope = currentScope;
+    this.difficulty = difficulty;
     this.currentQ = 0;
     this.totalQ = 5;
     this.correctCount = 0;
@@ -25,13 +26,15 @@ export class GameAdvCount {
     this.itemsCounted = 0;
 
     let targetCount;
-    if (this.scope === '100') {
-      // Tens and ones, e.g. 20, 30, or small tens
-      targetCount = (Math.floor(Math.random() * 5) + 1) * 5;
-    } else if (this.scope === '20') {
+    const diff = this.difficulty;
+    if (diff === 'challenge') {
+      targetCount = (Math.floor(Math.random() * 6) + 4) * 5; // 20 to 45 in groups of 5
+    } else if (diff === 'hard' || this.scope === '100') {
+      targetCount = (Math.floor(Math.random() * 5) + 3) * 5; // 15 to 35
+    } else if (diff === 'medium' || this.scope === '20') {
       targetCount = Math.floor(Math.random() * 11) + 6; // 6 to 16
     } else {
-      targetCount = Math.floor(Math.random() * 8) + 2; // 2 to 9
+      targetCount = Math.floor(Math.random() * 7) + 2; // 2 to 8
     }
 
     const items = ['🍎', '⭐', '🎈', '🐟', '🍦', '🍓', '🥕', '🌸'];
@@ -84,6 +87,9 @@ export class GameAdvCount {
             <button class="btn-back" id="advExitBtn">🏝️ Về Bản Đồ</button>
             <div class="game-title-badge">
               <h2>Trạm 1: Đếm & Chọn Số</h2>
+              <span class="game-diff-badge diff-${this.difficulty}">
+                ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).icon} ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).name}
+              </span>
             </div>
           </div>
           <div class="game-progress-bar-wrap">

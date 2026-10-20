@@ -1,11 +1,15 @@
 import { sound } from '../audio.js';
+import { DIFFICULTY_LEVELS } from '../data.js';
 
 export class GameFrog {
-  constructor(container, onComplete, onStarEarned, level = 1) {
+  constructor(container, onComplete, onStarEarned, level = 1, difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
-    this.level = parseInt(level, 10) || 1; // 1: Dễ (0-10), 2: Vừa (0-20), 3: Khó (0-100)
+    this.difficulty = difficulty;
+    if (difficulty === 'easy') this.level = 1;
+    else if (difficulty === 'medium') this.level = 2;
+    else this.level = 3;
     this.currentQIndex = 0;
     this.totalQ = 8;
     this.correctCount = 0;
@@ -304,7 +308,10 @@ export class GameFrog {
           <div class="game-header-info">
             <button class="btn-back" id="advExitBtn">🏝️ Về Bản Đồ</button>
             <div class="game-title-badge">
-              <h2>🐸 Ếch Nhảy Trên Tia Số (Cấp ${this.level})</h2>
+              <h2>🐸 Ếch Nhảy Tia Số</h2>
+              <span class="game-diff-badge diff-${this.difficulty}">
+                ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).icon} ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).name}
+              </span>
             </div>
           </div>
           <div class="game-progress-bar-wrap">

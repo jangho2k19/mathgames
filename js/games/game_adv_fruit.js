@@ -1,12 +1,13 @@
 import { sound } from '../audio.js';
-import { MIU_CHEERS, MIU_ENCOURAGE } from '../data.js';
+import { MIU_CHEERS, MIU_ENCOURAGE, DIFFICULTY_LEVELS } from '../data.js';
 
 export class GameAdvFruit {
-  constructor(container, onComplete, onStarEarned, currentScope = '10') {
+  constructor(container, onComplete, onStarEarned, currentScope = '10', difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
     this.scope = currentScope;
+    this.difficulty = difficulty;
     this.currentQ = 0;
     this.totalQ = 5;
     this.correctCount = 0;
@@ -23,8 +24,25 @@ export class GameAdvFruit {
     this.wrongTries = 0;
     const isAdd = Math.random() > 0.45;
     let n1, n2, targetAnswer, promptText, equationStr;
+    const diff = this.difficulty;
 
-    if (this.scope === '100') {
+    if (diff === 'challenge') {
+      const isMultiStep = Math.random() > 0.4;
+      if (isMultiStep) {
+        n1 = Math.floor(Math.random() * 15) + 10;
+        n2 = Math.floor(Math.random() * 10) + 5;
+        const n3 = Math.floor(Math.random() * 8) + 2;
+        targetAnswer = n1 + n2 - n3;
+        promptText = `Trong vườn có ${n1} quả cam, hái thêm ${n2} quả, biếu bà ${n3} quả. Còn lại bao nhiêu quả?`;
+        equationStr = `${n1} + ${n2} - ${n3} = ?`;
+      } else {
+        const total = Math.floor(Math.random() * 25) + 20;
+        const sub = Math.floor(Math.random() * 15) + 5;
+        targetAnswer = total - sub;
+        promptText = `Bác gấu có ${total} quả dưa hấu, sau khi tặng các bạn thì còn lại ${sub} quả. Đã tặng mấy quả?`;
+        equationStr = `${total} - ? = ${sub}`;
+      }
+    } else if (diff === 'hard' || this.scope === '100') {
       const tens1 = (Math.floor(Math.random() * 4) + 1) * 10;
       const tens2 = (Math.floor(Math.random() * 3) + 1) * 10;
       if (isAdd) {
@@ -38,7 +56,8 @@ export class GameAdvFruit {
         targetAnswer = tens1;
         promptText = `Trên cây có ${n1} quả cam, rụng bớt ${n2} quả. Trên cây còn mấy quả cam?`;
       }
-    } else if (this.scope === '20') {
+      equationStr = `${n1} ${isAdd ? '+' : '-'} ${n2} = ?`;
+    } else if (diff === 'medium' || this.scope === '20') {
       if (isAdd) {
         n1 = Math.floor(Math.random() * 6) + 8; // 8 to 13
         n2 = Math.floor(Math.random() * 5) + 2; // 2 to 6
@@ -50,6 +69,7 @@ export class GameAdvFruit {
         targetAnswer = n1 - n2;
         promptText = `Có ${n1} quả táo, bạn ăn hết ${n2} quả. Hỏi còn lại bao nhiêu quả táo?`;
       }
+      equationStr = `${n1} ${isAdd ? '+' : '-'} ${n2} = ?`;
     } else {
       // Scope 10
       if (isAdd) {
@@ -63,6 +83,7 @@ export class GameAdvFruit {
         targetAnswer = n1 - n2;
         promptText = `Trên cây có ${n1} quả táo, hái đi ${n2} quả. Trên cây còn lại bao nhiêu quả?`;
       }
+      equationStr = `${n1} ${isAdd ? '+' : '-'} ${n2} = ?`;
     }
 
     equationStr = `${n1} ${isAdd ? '+' : '-'} ${n2} = ?`;
@@ -114,6 +135,9 @@ export class GameAdvFruit {
             <button class="btn-back" id="advExitBtn">🏝️ Về Bản Đồ</button>
             <div class="game-title-badge">
               <h2>Trạm 2: Hái Quả Cộng Trừ</h2>
+              <span class="game-diff-badge diff-${this.difficulty}">
+                ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).icon} ${(DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium).name}
+              </span>
             </div>
           </div>
           <div class="game-progress-bar-wrap">

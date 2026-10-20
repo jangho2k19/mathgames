@@ -1,11 +1,13 @@
 import { sound } from '../audio.js';
+import { DIFFICULTY_LEVELS } from '../data.js';
 
 export class GameMath {
-  constructor(container, onComplete, onStarEarned, semester = 1) {
+  constructor(container, onComplete, onStarEarned, semester = 1, difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
     this.semester = semester;
+    this.difficulty = difficulty;
     this.currentQ = 0;
     this.totalQ = 5;
     this.correctCount = 0;
@@ -28,23 +30,23 @@ export class GameMath {
     let num1 = 0, num2 = 0, isAdd = true, targetAnswer = 0;
     let equationStr = '';
     let visualCountersHtml = '';
+    const diff = this.difficulty;
 
-    if (this.semester === 1) {
-      // Within 10
+    if (diff === 'easy') {
+      // Within 10 with visual helpers
       isAdd = Math.random() > 0.5;
       if (isAdd) {
-        num1 = Math.floor(Math.random() * 8) + 1; // 1 to 8
-        num2 = Math.floor(Math.random() * (10 - num1 + 1)); // num1 + num2 <= 10
+        num1 = Math.floor(Math.random() * 7) + 1; // 1 to 7
+        num2 = Math.floor(Math.random() * (10 - num1 + 1));
         targetAnswer = num1 + num2;
         equationStr = `${num1} + ${num2} = ?`;
       } else {
         num1 = Math.floor(Math.random() * 9) + 2; // 2 to 10
-        num2 = Math.floor(Math.random() * (num1 + 1)); // num2 <= num1
+        num2 = Math.floor(Math.random() * (num1 + 1));
         targetAnswer = num1 - num2;
         equationStr = `${num1} - ${num2} = ?`;
       }
 
-      // Visual counters
       visualCountersHtml = `
         <div class="visual-counters-bar">
           <span>🍎 x ${num1}</span>
@@ -52,63 +54,121 @@ export class GameMath {
           <span>🍎 x ${num2}</span>
         </div>
       `;
-    } else {
-      // Semester 2: Within 100 without regrouping
-      isAdd = Math.random() > 0.5;
-      const type = Math.random() > 0.5 ? 'twoPlusOne' : 'twoPlusTwo';
-
+    } else if (diff === 'medium') {
+      // Within 20
+      isAdd = Math.random() > 0.45;
       if (isAdd) {
-        if (type === 'twoPlusOne') {
-          const tens = Math.floor(Math.random() * 8) + 1; // 10 to 80
-          const u1 = Math.floor(Math.random() * 6); // 0 to 5
-          const u2 = Math.floor(Math.random() * (9 - u1 + 1)); // sum <= 9
-          num1 = tens * 10 + u1;
-          num2 = u2;
-        } else {
-          const t1 = Math.floor(Math.random() * 4) + 1;
-          const t2 = Math.floor(Math.random() * (8 - t1)) + 1;
-          const u1 = Math.floor(Math.random() * 5);
-          const u2 = Math.floor(Math.random() * (9 - u1));
-          num1 = t1 * 10 + u1;
-          num2 = t2 * 10 + u2;
-        }
+        num1 = Math.floor(Math.random() * 11) + 4; // 4 to 14
+        num2 = Math.floor(Math.random() * (20 - num1)) + 1;
         targetAnswer = num1 + num2;
         equationStr = `${num1} + ${num2} = ?`;
       } else {
-        if (type === 'twoPlusOne') {
-          const tens = Math.floor(Math.random() * 8) + 1;
-          const u1 = Math.floor(Math.random() * 6) + 4; // 4 to 9
-          const u2 = Math.floor(Math.random() * (u1 + 1));
-          num1 = tens * 10 + u1;
-          num2 = u2;
-        } else {
-          const t1 = Math.floor(Math.random() * 4) + 4; // 4 to 7
-          const t2 = Math.floor(Math.random() * t1);
-          const u1 = Math.floor(Math.random() * 5) + 4;
-          const u2 = Math.floor(Math.random() * (u1 + 1));
-          num1 = t1 * 10 + u1;
-          num2 = t2 * 10 + u2;
-        }
+        num1 = Math.floor(Math.random() * 10) + 11; // 11 to 20
+        num2 = Math.floor(Math.random() * 10) + 1;
         targetAnswer = num1 - num2;
         equationStr = `${num1} - ${num2} = ?`;
+      }
+    } else if (diff === 'hard') {
+      // Within 100 without regrouping
+      isAdd = Math.random() > 0.5;
+      const type = Math.random() > 0.4 ? 'twoPlusTwo' : 'tens';
+
+      if (type === 'tens') {
+        const t1 = (Math.floor(Math.random() * 5) + 2) * 10;
+        const t2 = (Math.floor(Math.random() * 4) + 1) * 10;
+        if (isAdd) {
+          num1 = t1;
+          num2 = t2;
+          targetAnswer = num1 + num2;
+          equationStr = `${num1} + ${num2} = ?`;
+        } else {
+          num1 = Math.max(t1, t2);
+          num2 = Math.min(t1, t2);
+          targetAnswer = num1 - num2;
+          equationStr = `${num1} - ${num2} = ?`;
+        }
+      } else {
+        const t1 = Math.floor(Math.random() * 4) + 1;
+        const t2 = Math.floor(Math.random() * (8 - t1)) + 1;
+        const u1 = Math.floor(Math.random() * 5);
+        const u2 = Math.floor(Math.random() * (9 - u1));
+        if (isAdd) {
+          num1 = t1 * 10 + u1;
+          num2 = t2 * 10 + u2;
+          targetAnswer = num1 + num2;
+          equationStr = `${num1} + ${num2} = ?`;
+        } else {
+          num1 = (t1 + t2) * 10 + (u1 + u2);
+          num2 = t2 * 10 + u2;
+          targetAnswer = num1 - num2;
+          equationStr = `${num1} - ${num2} = ?`;
+        }
+      }
+    } else {
+      // challenge: 3 numbers OR missing number equation
+      const challengeType = Math.random() > 0.5 ? 'threeNumbers' : 'missingNumber';
+      if (challengeType === 'threeNumbers') {
+        const a = Math.floor(Math.random() * 20) + 10;
+        const b = Math.floor(Math.random() * 15) + 5;
+        const c = Math.floor(Math.random() * 10) + 2;
+        const isSecondAdd = Math.random() > 0.4;
+        if (isSecondAdd) {
+          targetAnswer = a + b + c;
+          equationStr = `${a} + ${b} + ${c} = ?`;
+        } else {
+          targetAnswer = a + b - c;
+          equationStr = `${a} + ${b} - ${c} = ?`;
+        }
+      } else {
+        const isAddMissing = Math.random() > 0.5;
+        if (isAddMissing) {
+          const partA = Math.floor(Math.random() * 20) + 10;
+          const partB = Math.floor(Math.random() * 25) + 15;
+          const sum = partA + partB;
+          const hideLeft = Math.random() > 0.5;
+          if (hideLeft) {
+            targetAnswer = partA;
+            equationStr = `? + ${partB} = ${sum}`;
+          } else {
+            targetAnswer = partB;
+            equationStr = `${partA} + ? = ${sum}`;
+          }
+        } else {
+          const total = Math.floor(Math.random() * 35) + 30;
+          const sub = Math.floor(Math.random() * 20) + 10;
+          const rem = total - sub;
+          const hideSub = Math.random() > 0.5;
+          if (hideSub) {
+            targetAnswer = sub;
+            equationStr = `${total} - ? = ${rem}`;
+          } else {
+            targetAnswer = total;
+            equationStr = `? - ${sub} = ${rem}`;
+          }
+        }
       }
     }
 
     // Generate 4 options
     const options = [targetAnswer];
     while (options.length < 4) {
-      const delta = Math.floor(Math.random() * 7) - 3;
+      const delta = (Math.floor(Math.random() * 7) - 3) * (diff === 'hard' || diff === 'challenge' ? (Math.random() > 0.5 ? 10 : 1) : 1);
       const opt = Math.max(0, targetAnswer + delta);
       if (!options.includes(opt)) options.push(opt);
     }
     options.sort(() => Math.random() - 0.5);
+
+    const diffInfo = DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium;
 
     this.container.innerHTML = `
       <div class="game-top-bar">
         <div class="game-header-info">
           <button class="btn-back" id="gameExitBtn">← Trở về</button>
           <div class="game-title-badge">
-            <h2>Khu Vườn Phép Tính (${this.semester === 1 ? 'Phạm vi 10' : 'Phạm vi 100'})</h2>
+            <h2>Khu Vườn Phép Tính</h2>
+            <span class="game-diff-badge diff-${this.difficulty}">
+              ${diffInfo.icon} ${diffInfo.name}
+            </span>
           </div>
         </div>
         <div class="game-progress-bar-wrap">
@@ -121,7 +181,10 @@ export class GameMath {
 
       <div class="question-prompt-box">
         <span class="prompt-icon">🍎</span>
-        <span class="prompt-text">Bé hãy nhẩm tính kết quả phép tính bên dưới nhé!</span>
+        <span class="prompt-text">
+          Bé hãy nhẩm tính và bấm chọn kết quả chính xác nhé!
+          ${this.difficulty === 'challenge' ? '<span class="challenge-sparkle-tag">⚡ Toán tư duy nâng cao</span>' : ''}
+        </span>
       </div>
 
       <div class="game-play-area">

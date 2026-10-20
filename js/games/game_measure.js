@@ -1,11 +1,13 @@
 import { sound } from '../audio.js';
+import { DIFFICULTY_LEVELS } from '../data.js';
 
 export class GameMeasure {
-  constructor(container, onComplete, onStarEarned, semester = 2) {
+  constructor(container, onComplete, onStarEarned, semester = 2, difficulty = 'medium') {
     this.container = container;
     this.onComplete = onComplete;
     this.onStarEarned = onStarEarned;
     this.semester = semester;
+    this.difficulty = difficulty;
     this.currentQ = 0;
     this.totalQ = 5;
     this.correctCount = 0;
@@ -24,6 +26,7 @@ export class GameMeasure {
     }
 
     this.currentQ++;
+    const diff = this.difficulty;
 
     // Items to measure
     const items = [
@@ -35,9 +38,35 @@ export class GameMeasure {
     ];
     const chosen = items[Math.floor(Math.random() * items.length)];
 
-    // Target cm between 3 and 10 cm
-    const targetCm = Math.floor(Math.random() * 8) + 3; // 3 to 10
-    const rulerMax = 12; // 0 to 12 cm
+    let targetCm = 5;
+    let rulerMax = 12;
+    let startCm = 0;
+    let endCm = 5;
+    let promptText = `Bé hãy nhìn thước kẻ và cho biết <b>${chosen.name}</b> dài bao nhiêu cm nhé!`;
+
+    if (diff === 'easy') {
+      targetCm = Math.floor(Math.random() * 5) + 2; // 2 to 6 cm
+      startCm = 0;
+      endCm = targetCm;
+      rulerMax = 10;
+    } else if (diff === 'medium') {
+      targetCm = Math.floor(Math.random() * 7) + 3; // 3 to 9 cm
+      startCm = 0;
+      endCm = targetCm;
+      rulerMax = 12;
+    } else if (diff === 'hard') {
+      targetCm = Math.floor(Math.random() * 8) + 5; // 5 to 12 cm
+      startCm = 0;
+      endCm = targetCm;
+      rulerMax = 15;
+    } else {
+      // challenge: offset start (e.g. from 2cm to 8cm -> length = 6cm!)
+      startCm = Math.floor(Math.random() * 3) + 2; // 2 to 4
+      targetCm = Math.floor(Math.random() * 5) + 3; // 3 to 7
+      endCm = startCm + targetCm;
+      rulerMax = 15;
+      promptText = `Vật bắt đầu từ vạch <b>${startCm} cm</b> đến vạch <b>${endCm} cm</b>. Hỏi <b>${chosen.name}</b> dài bao nhiêu cm?`;
+    }
 
     // Generate 4 distinct options
     const options = [targetCm];
@@ -49,8 +78,10 @@ export class GameMeasure {
     options.sort(() => Math.random() - 0.5);
 
     // Calculate percentage width on ruler
-    // 0 to 12 cm. targetCm / 12 * 100%
+    const leftOffsetPercent = (startCm / rulerMax) * 100;
     const itemWidthPercent = (targetCm / rulerMax) * 100;
+
+    const diffInfo = DIFFICULTY_LEVELS[this.difficulty] || DIFFICULTY_LEVELS.medium;
 
     this.container.innerHTML = `
       <div class="game-top-bar">
@@ -58,6 +89,9 @@ export class GameMeasure {
           <button class="btn-back" id="gameExitBtn">← Trở về</button>
           <div class="game-title-badge">
             <h2>Cây Thước Kì Diệu (Đo độ dài cm)</h2>
+            <span class="game-diff-badge diff-${this.difficulty}">
+              ${diffInfo.icon} ${diffInfo.name}
+            </span>
           </div>
         </div>
         <div class="game-progress-bar-wrap">
@@ -70,27 +104,34 @@ export class GameMeasure {
 
       <div class="question-prompt-box">
         <span class="prompt-icon">📏</span>
-        <span class="prompt-text">Bé hãy nhìn thước và cho biết <b>${chosen.name}</b> dài bao nhiêu cm?</span>
+        <span class="prompt-text">
+          ${promptText}
+          ${this.difficulty === 'challenge' ? '<span class="challenge-sparkle-tag">⚡ Đo lệch vạch 0</span>' : ''}
+        </span>
       </div>
 
       <div class="game-play-area">
-        <div class="measure-area">
-          <!-- Item to measure aligned to 0 -->
-          <div style="width: 100%; position: relative; height: 60px; display: flex; align-items: center;">
-            <div style="width: ${itemWidthPercent}%; height: 36px; background: ${chosen.color}; border-radius: 10px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 26px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: width 0.5s ease;">
-              <span>${chosen.icon}</span>
+        <div class="ruler-measurement-stage">
+          <!-- Item to measure -->
+          <div class="measured-item-wrap" style="padding-left: ${leftOffsetPercent}%;">
+            <div class="measured-item-bar" style="width: ${itemWidthPercent}%; background: ${chosen.color};">
+              <span class="measured-icon">${chosen.icon}</span>
+              <span class="measured-label">${chosen.name}</span>
             </div>
           </div>
 
-          <!-- Ruler -->
-          <div class="virtual-ruler">
-            ${Array.from({ length: rulerMax + 1 }).map((_, cm) => `
-              <div class="ruler-tick" style="flex: ${cm === rulerMax ? '0' : '1'};">
-                <span>${cm}</span>
-              </div>
-            `).join('')}
+          <!-- Ruler Graphic -->
+          <div class="wooden-ruler">
+            <div class="ruler-ticks-track">
+              ${Array.from({ length: rulerMax + 1 }).map((_, i) => `
+                <div class="ruler-cm-tick ${i === startCm || i === endCm ? 'highlight-tick' : ''}">
+                  <span class="tick-line"></span>
+                  <span class="tick-num">${i}</span>
+                </div>
+              `).join('')}
+            </div>
+            <span class="ruler-unit">cm</span>
           </div>
-          <span style="font-size: 14px; font-weight: 800; color: #a16207; align-self: flex-end;">Đơn vị: cm (xăng-ti-mét)</span>
         </div>
       </div>
 
