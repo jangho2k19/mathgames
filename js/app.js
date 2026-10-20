@@ -14,6 +14,8 @@ import { GameBrick } from './games/game_brick.js';
 import { GameRacing } from './games/game_racing.js';
 import { GameBubbles } from './games/game_bubbles.js';
 import { GameFishing } from './games/game_fishing.js';
+import { GameCarrot } from './games/game_carrot.js';
+import { GameBubbleCannon } from './games/game_bubble_cannon.js';
 
 // Adventure Island components
 import { AdventureMap } from './map.js';
@@ -72,6 +74,12 @@ class App {
     this.renderMain();
     this.bindGlobalEvents();
     confetti.init();
+
+    window.addEventListener('app:return-home', () => {
+      this.currentGame = null;
+      this.currentGameId = null;
+      this.renderMain();
+    });
   }
 
   updateDifficultyUI() {
@@ -216,7 +224,7 @@ class App {
           🏝️ Đảo Toán Học Phiêu Lưu (Theo Bản Đồ)
         </button>
         <button class="tab-btn ${this.mode === 'curriculum' ? 'active' : ''}" id="tabCurrMode">
-          📚 Khu Vườn SGK (11 Trò Chơi)
+          📚 Khu Vườn SGK (14 Trò Chơi)
         </button>
       </div>
 
@@ -266,7 +274,7 @@ class App {
           🏝️ Đảo Toán Học Phiêu Lưu (Theo Bản Đồ)
         </button>
         <button class="tab-btn ${this.mode === 'curriculum' ? 'active' : ''}" id="tabCurrMode">
-          📚 Khu Vườn SGK (11 Trò Chơi)
+          📚 Khu Vườn SGK (14 Trò Chơi)
         </button>
       </div>
 
@@ -289,6 +297,40 @@ class App {
         <div class="robot-speech">
           <h2>Chào các bạn nhỏ lớp 1! 🤖✨</h2>
           <p>Hãy cùng Robot khám phá thế giới toán học diệu kì qua các trò chơi bám sát sách giáo khoa <b>Toán 1 (Kết nối tri thức với cuộc sống)</b> nhé!</p>
+        </div>
+      </section>
+
+      <!-- Special Featured Arcade Banner -->
+      <section class="special-games-banner">
+        <div class="special-banner-header">
+          <span class="special-badge-pill">✨ MỚI CẬP NHẬT</span>
+          <h3>Trò Chơi Tương Tác Đặc Biệt</h3>
+        </div>
+        <div class="special-games-cards">
+          <div class="special-game-item item-carrot" data-game-id="carrot" role="button" tabindex="0">
+            <div class="special-item-left">
+              <span class="special-item-emoji">🥕</span>
+              <div>
+                <h4>Thỏ Gom Cà Rốt</h4>
+                <p>Cùng Bác Gấu & Thỏ Trắng rèn luyện Tách - Gộp số trong vườn</p>
+              </div>
+            </div>
+            <div class="special-item-right">
+              <span class="special-play-tag">Vào chơi ▶</span>
+            </div>
+          </div>
+          <div class="special-game-item item-cannon" data-game-id="cannon" role="button" tabindex="0">
+            <div class="special-item-left">
+              <span class="special-item-emoji">🎈</span>
+              <div>
+                <h4>Đại Bác Bong Bóng</h4>
+                <p>Xoay nòng pháo ngôi sao bắn nổ bóng bay phép tính phản xạ nhanh</p>
+              </div>
+            </div>
+            <div class="special-item-right">
+              <span class="special-play-tag">Vào chơi ▶</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -343,6 +385,15 @@ class App {
         sound.playClick();
         this.currentSemester = btn.dataset.sem;
         this.renderCurriculumHome();
+      });
+    });
+
+    // Bind special banner clicks
+    this.mainContent.querySelectorAll('.special-game-item').forEach(item => {
+      item.addEventListener('click', () => {
+        sound.playClick();
+        const gameId = item.dataset.gameId;
+        this.launchGame(gameId);
       });
     });
 
@@ -436,6 +487,12 @@ class App {
         this.currentGame = new GameFrog(screen, onComplete, onStarEarned, lvl, currentDiff);
         break;
       }
+      case 'carrot':
+        this.currentGame = new GameCarrot(screen, onComplete, onStarEarned, semesterNum, currentDiff);
+        break;
+      case 'cannon':
+        this.currentGame = new GameBubbleCannon(screen, onComplete, onStarEarned, semesterNum, currentDiff);
+        break;
       default:
         this.currentGameId = null;
         this.renderMain();

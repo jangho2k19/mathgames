@@ -195,14 +195,38 @@ export const GAMES_INFO = [
     icon: '🐸',
     bgColor: '#dcfce7',
     desc: 'Quan sát chú ếch nhảy tiến, nhảy lùi trên đài sen để hiểu sâu bản chất phép cộng trừ.'
+  },
+  {
+    id: 'carrot',
+    title: 'Thỏ Gom Cà Rốt',
+    subtitle: 'Bài 5: Tách - Gộp số cùng Bác Gấu & Thỏ Trắng',
+    semester: 1,
+    tag: 'Tách - Gộp 🥕',
+    tagClass: 'tag-tap1',
+    icon: '🥕',
+    bgColor: '#ffedd5',
+    desc: 'Giúp Bác Gấu nông dân và Thỏ Trắng đào 2 luống cà rốt sao cho tổng số củ bằng đúng yêu cầu!'
+  },
+  {
+    id: 'cannon',
+    title: 'Đại Bác Bong Bóng',
+    subtitle: 'Chủ đề 3 & 8: Bắn đại bác tính nhanh cộng trừ',
+    semester: 1,
+    tag: 'Bắn Pháo 🎈',
+    tagClass: 'tag-tap1',
+    icon: '🎈',
+    bgColor: '#e0f2fe',
+    desc: 'Xoay nòng đại bác ngôi sao và ngắm bắn nổ các quả bóng bay mang đáp án phép tính chính xác!'
   }
 ];
 
 export const BADGES = [
   { id: 'first_game', title: 'Ngôi Sao Khởi Đầu', icon: '🌟', reqStars: 5, desc: 'Đạt 5 ngôi sao đầu tiên' },
   { id: 'master_math', title: 'Thần Đồng Tính Nhẩm', icon: '⚡', reqStars: 15, desc: 'Đạt 15 ngôi sao trong các phép tính' },
+  { id: 'carrot_hero', title: 'Siêu Thỏ Nhổ Cà Rốt', icon: '🥕', reqStars: 20, desc: 'Bậc thầy tách gộp số cùng Thỏ Trắng và Bác Gấu' },
   { id: 'master_shapes', title: 'Kiến Trúc Sư Nhí', icon: '📐', reqStars: 25, desc: 'Chinh phục các thử thách hình khối' },
   { id: 'brick_master', title: 'Vua Phá Gạch', icon: '🧱', reqStars: 35, desc: 'Bậc thầy công phá tường gạch số học' },
+  { id: 'cannon_ace', title: 'Thiện Xạ Đại Bác', icon: '🎈', reqStars: 40, desc: 'Bách phát bách trúng bóng bay phép tính' },
   { id: 'speed_racer', title: 'Tay Đua Siêu Cấp', icon: '🏎️', reqStars: 45, desc: 'Kích hoạt nitro làm chủ đường đua' },
   { id: 'frog_master', title: 'Vua Tia Số', icon: '🐸', reqStars: 55, desc: 'Bậc thầy nhảy trên tia số ao sen cùng chú ếch!' },
   { id: 'time_traveler', title: 'Chuyên Gia Thời Gian', icon: '🧭', reqStars: 60, desc: 'Nắm vững giờ giấc và thứ trong tuần' },
